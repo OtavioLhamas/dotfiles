@@ -1,0 +1,9 @@
+# Group variables for all Linux hosts
+# Common packages and settings for Linux distributions
+
+linux_common_packages:
+  - htop
+  - vim
+  - git
+  - curl
+  - jq

@@ -1,0 +1,36 @@
+# Mise configuration — user-space development tools
+# Tools are installed by `run_after_20-provision.sh` via `mise install`
+# See: https://mise.jdx.dev/registry.html
+
+[tools]
+# Common tools (all platforms)
+python = "latest"
+ripgrep = "latest"
+fzf = "latest"
+fd = "latest"
+zoxide = "latest"
+tlrc = "latest"
+neovim = "latest"
+
+# Linux-only tools
+"ubi:aristocratos/btop" = { version = "latest", os = ["linux"] }
+"ubi:bcicen/ctop" = { version = "latest", os = ["linux"] }
+"ubi:jesseduffield/lazydocker" = { version = "latest", os = ["linux"] }
+htop = { version = "latest", os = ["linux"] }
+vim = { version = "latest", os = ["linux"] }
+
+# Windows-only tools
+powershell = { version = "latest", os = ["windows"] }
+
+# Development category tools
+opencode = { version = "latest", if = "has 'development' .category" }
+lazygit = { version = "latest", if = "has 'development' .category" }
+rust = { version = "latest", if = "has 'development' .category" }
+go = { version = "latest", if = "has 'development' .category" }
+github-cli = { version = "latest", if = "has 'development' .category" }
+
+# Work category tools
+dotnet = { version = "latest", if = "has 'work' .category" }
+
+# Personal category tools
+yazi = { version = "latest", if = "has 'personal' .category" }

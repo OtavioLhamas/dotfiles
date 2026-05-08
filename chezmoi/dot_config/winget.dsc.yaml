@@ -1,0 +1,53 @@
+# WinGet Configuration File (DSC)
+# Used on Windows Native to declaratively install packages and configure settings
+# See: https://learn.microsoft.com/en-us/windows/package-manager/configuration/
+# Run with: winget configure <path>
+
+properties:
+  resources:
+    # --- Common Tools ---
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Git.Git
+      settings:
+        id: Git.Git
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: GitHub.cli
+      settings:
+        id: GitHub.cli
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Microsoft.PowerShell
+      settings:
+        id: Microsoft.PowerShell
+        source: winget
+
+    # --- Development Tools ---
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Microsoft.VisualStudioCode
+      settings:
+        id: Microsoft.VisualStudioCode
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Microsoft.DotNet.SDK.8
+      settings:
+        id: Microsoft.DotNet.SDK.8
+        source: winget
+
+    # --- System Utilities ---
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Microsoft.PowerToys
+      settings:
+        id: Microsoft.PowerToys
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Microsoft.WindowsTerminal
+      settings:
+        id: Microsoft.WindowsTerminal
+        source: winget
+
+  configurationVersion: 0.2.0

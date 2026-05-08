@@ -1,0 +1,7 @@
+# Group variables for WSL hosts
+
+wsl_specific_packages:
+  - wslu
+
+# Windows host IP for cross-communication
+windows_host_ip: "{{ ansible_default_ipv4.gateway | default('') }}"

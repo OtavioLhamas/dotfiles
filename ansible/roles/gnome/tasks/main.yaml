@@ -1,0 +1,46 @@
+# GNOME role — configures GNOME desktop environment
+# Only runs when desktop_environment == 'gnome'
+
+- name: Ensure GNOME session manager is available
+  ansible.builtin.command:
+    cmd: which gnome-session
+  register: gnome_session_check
+  changed_when: false
+  failed_when: false
+
+- name: Configure GNOME keybindings
+  ansible.builtin.command:
+    cmd: "gsettings set {{ item.schema }} {{ item.key }} '{{ item.value }}'"
+  loop:
+    - { schema: "org.gnome.desktop.wm.keybindings", key: "close", value: "['<Super>q']" }
+    - { schema: "org.gnome.desktop.wm.keybindings", key: "maximize", value: "['<Super>Up']" }
+    - { schema: "org.gnome.desktop.wm.keybindings", key: "unmaximize", value: "['<Super>Down']" }
+    - { schema: "org.gnome.desktop.wm.keybindings", key: "toggle-fullscreen", value: "['<Super>f']" }
+    - { schema: "org.gnome.settings-daemon.plugins.media-keys", key: "home", value: "['<Super>e']" }
+    - { schema: "org.gnome.settings-daemon.plugins.media-keys", key: "terminal", value: "['<Super>t']" }
+  when:
+    - gnome_session_check.rc == 0
+    - desktop_environment | default('') == 'gnome'
+
+- name: Configure GNOME desktop settings
+  ansible.builtin.command:
+    cmd: "gsettings set {{ item.schema }} {{ item.key }} '{{ item.value }}'"
+  loop:
+    - { schema: "org.gnome.desktop.interface", key: "show-battery-percentage", value: "true" }
+    - { schema: "org.gnome.desktop.interface", key: "enable-animations", value: "true" }
+    - { schema: "org.gnome.desktop.interface", key: "clock-show-seconds", value: "true" }
+    - { schema: "org.gnome.desktop.interface", key: "clock-show-weekday", value: "true" }
+  when:
+    - gnome_session_check.rc == 0
+    - desktop_environment | default('') == 'gnome'
+
+- name: Configure GNOME dock
+  ansible.builtin.command:
+    cmd: "gsettings set {{ item.schema }} {{ item.key }} '{{ item.value }}'"
+  loop:
+    - { schema: "org.gnome.shell.extensions.dash-to-dock", key: "dock-position", value: "'LEFT'" }
+    - { schema: "org.gnome.shell.extensions.dash-to-dock", key: "show-apps-at-top", value: "true" }
+    - { schema: "org.gnome.shell.extensions.dash-to-dock", key: "dash-max-icon-size", value: "32" }
+  when:
+    - gnome_session_check.rc == 0
+    - desktop_environment | default('') == 'gnome'

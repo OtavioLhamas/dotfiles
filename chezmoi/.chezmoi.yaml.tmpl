@@ -1,0 +1,19 @@
+{{ $categories := promptMultichoiceOnce
+    . "categories"
+    "Machine categories(s)"
+    (list "work" "personal" "gaming" "multimedia" "development") 
+-}}
+{{- $formFactor := promptChoiceOnce
+    . "formFactor" "Form factor"
+    (list "desktop" "laptop" "server") -}}
+{{- $de := promptChoiceOnce
+    . "de" "Desktop environment"
+    (list "gnome" "cosmic" "none") -}}
+
+data:
+    categories:
+{{ range $categories }}
+    - {{ . }}
+{{ end }}
+    form_factor:  {{ $formFactor | quote }}
+    desktop_environment: {{ $de | quote }}

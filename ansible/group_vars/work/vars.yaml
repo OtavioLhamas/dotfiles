@@ -1,0 +1,6 @@
+# Group variables for work machines
+
+work_packages:
+  - libreoffice
+  - thunderbird
+  - slack-desktop

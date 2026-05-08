@@ -1,0 +1,66 @@
+# Packages managed by chezmoi scripts (not mise or ansible)
+# Priority: mise > winget > ansible > chezmoi scripts
+# Only add packages here if they are NOT available in the above
+
+packages:
+  common:
+  linux:
+    debian:
+    fedora:
+  windows:
+
+  # Category-specific packages
+  categories:
+    gaming:
+      linux:
+        debian:
+        fedora:
+
+    development:
+      linux:
+        debian:
+        fedora:
+
+    work:
+      linux:
+        debian:
+        fedora:
+
+    multimedia:
+      linux:
+        debian:
+        fedora:
+
+  # Form factor-specific packages
+  form_factors:
+    laptop:
+      linux:
+        debian:
+        fedora:
+
+    desktop:
+      linux:
+        debian:
+        fedora:
+
+    server:
+      linux:
+        debian:
+        fedora:
+
+  # Desktop environment-specific packages
+  desktop_environments:
+    gnome:
+      linux:
+        debian:
+        fedora:
+
+    kde:
+      linux:
+        debian:
+        fedora:
+
+    cosmic:
+      linux:
+        debian:
+        fedora:

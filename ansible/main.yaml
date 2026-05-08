@@ -1,0 +1,46 @@
+# Main Ansible playbook
+# Entry point for system-wide configuration
+# pre_tasks dynamically group hosts by OS facts
+
+- hosts: all
+  gather_facts: yes
+  become: yes
+  become_method: sudo
+
+  pre_tasks:
+    - name: Display OS family
+      ansible.builtin.debug:
+        var: ansible_os_family
+
+    - name: Group by OS family
+      ansible.builtin.group_by:
+        key: "{{ ansible_os_family | lower }}"
+
+    - name: Display distribution
+      ansible.builtin.debug:
+        var: ansible_distribution
+
+    - name: Group by distribution
+      ansible.builtin.group_by:
+        key: "{{ ansible_distribution | lower }}"
+
+    - name: Display system
+      ansible.builtin.debug:
+        var: ansible_system
+
+    - name: Group by system
+      ansible.builtin.group_by:
+        key: "{{ ansible_system | lower }}"
+
+  roles:
+    - role: common
+      tags: ["common"]
+
+    - role: ssh
+      tags: ["ssh"]
+
+    - role: gnome
+      tags: ["gnome", "desktop"]
+      when:
+        - desktop_environment is defined
+        - desktop_environment == 'gnome'

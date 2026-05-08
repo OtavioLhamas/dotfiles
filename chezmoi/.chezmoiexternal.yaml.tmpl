@@ -1,0 +1,34 @@
+# Chezmoi externals — dotfiles from external git repositories
+# Uses template conditionals based on machine classification
+# Requires Bitwarden-stored GitHub PAT for private repos
+
+{{ $githubPat := "" }}
+{{- if eq .chezmoi.os "linux" -}}
+{{-   if stat (joinPath .chezmoi.homeDir ".bw-session") -}}
+{{-     $githubPat = output "bw" "get" "password" "github-pat" | trim -}}
+{{-   end -}}
+{{- end -}}
+
+# Example: SSH dotfiles repo (only on work machines)
+{{ if has "work" .categories }}
+[".config/ssh-work"]
+    type = "git-repo"
+    url = "https://{{ $githubPat }}@github.com/youruser/dotfiles-ssh-work.git"
+    refreshPeriod = "168h"
+{{ end }}
+
+# Example: Gaming dotfiles repo
+{{ if has "gaming" .categories }}
+[".config/gaming-dots"]
+    type = "git-repo"
+    url = "https://{{ $githubPat }}@github.com/youruser/dotfiles-gaming.git"
+    refreshPeriod = "168h"
+{{ end }}
+
+# Example: Development dotfiles repo
+{{ if has "development" .categories }}
+[".config/dev-dots"]
+    type = "git-repo"
+    url = "https://{{ $githubPat }}@github.com/youruser/dotfiles-dev.git"
+    refreshPeriod = "168h"
+{{ end }}
