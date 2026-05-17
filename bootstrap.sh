@@ -2,8 +2,6 @@
 # Dotfiles bootstrap script for Linux and WSL
 # Minimal bootstrap: installs chezmoi only, everything else is handled by chezmoi scripts
 
-set -euo pipefail
-
 if ! chezmoi="$(command -v chezmoi)"; then
     # Install chezmoi
     bin_dir="${HOME}/.local/bin"
