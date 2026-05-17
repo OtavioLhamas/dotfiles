@@ -20,19 +20,14 @@ if ! chezmoi="$(command -v chezmoi)"; then
     sh -c "${chezmoi_install_script}" -- -b "${bin_dir}"
 
     # Move to PATH if installed to local bin
-    if [ -f "$HOME/bin/chezmoi" ]; then
-        export PATH="$HOME/bin:$PATH"
+    if [ -f "$chezmoi" ]; then
+        export PATH="$chezmoi:$PATH"
+        echo "$PATH"
     fi
 
     unset chezmoi_install_script bin_dir
 else
     echo "chezmoi already installed"
-fi
-
-# Verify chezmoi is available
-if ! command -v chezmoi &>/dev/null; then
-    echo "Error: chezmoi installation failed or not in PATH"
-    exit 1
 fi
 
 # POSIX way to get script's dir: https://stackoverflow.com/a/29834779/12156188
