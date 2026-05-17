@@ -24,25 +24,22 @@ for package in "${wanted_packages[@]}"; do
     fi
 done
 
-# Helper install function
-install_pkg() {
-    local pkg="$1"
-    case "$DISTRO" in
-    ubuntu | debian | pop)
-        sudo apt-get update -qq
-        sudo apt-get install -y "${pkg[@]}"
-        ;;
-    fedora)
-        sudo dnf install -y "${pkg[@]}"
-        ;;
-    *)
-        echo "Unknown/unsupported distro '$DISTRO'. Cannot install '${missing_packages[*]}' automatically."
-        ;;
-    esac
-}
+install_cmd=""
+case "$DISTRO" in
+ubuntu | debian | pop)
+    sudo apt-get update -qq
+    install_cmd="sudo DEBIAN_FRONTEND=noninteractive apt-get install -y"
+    ;;
+fedora)
+    install_cmd="sudo dnf install -y"
+    ;;
+*)
+    echo "Unknown/unsupported distro '$DISTRO'. Cannot install '${missing_packages[*]}' automatically."
+    ;;
+esac
 
 echo "Installing missing packages: ${missing_packages[*]}"
-install_pkg missing_packages
+$install_cmd "${missing_packages[@]}"
 
 if ! command -v yq &>/dev/null; then
     # --- Install yq if missing ---
