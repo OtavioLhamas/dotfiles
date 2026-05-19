@@ -24,6 +24,7 @@ for package in "${wanted_packages[@]}"; do
     fi
 done
 
+# --- Install missing packages if any ---
 if [ ! ${#missing_packages[@]} -eq 0 ]; then
     install_cmd=""
     case "$DISTRO" in
@@ -35,7 +36,7 @@ if [ ! ${#missing_packages[@]} -eq 0 ]; then
         install_cmd="sudo dnf install -y"
         ;;
     *)
-        echo "Unknown/unsupported distro '$DISTRO'. Cannot install '${missing_packages[*]}' automatically."
+        echo "Unknown/unsupported distro '$DISTRO'. Cannot install missing packages automatically."
         ;;
     esac
 
@@ -43,17 +44,19 @@ if [ ! ${#missing_packages[@]} -eq 0 ]; then
     $install_cmd "${missing_packages[@]}"
 fi
 
+# --- Install yq if missing ---
+# Debian registry version is outdated
 if ! command -v yq &>/dev/null; then
-    # --- Install yq if missing ---
     echo "Installing yq binary..."
     sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
     sudo chmod +x /usr/local/bin/yq
 fi
 
+# --- Install Bitwarden CLI if missing ---
 if ! command -v bw &>/dev/null; then
-    # --- Install Bitwarden CLI if missing ---
     echo "Installing Bitwarden CLI (bw)..."
 
+    # Fetch the latest CLI release number
     BW_VERSION=$(curl -s https://api.github.com/repos/bitwarden/clients/releases | grep -o '"tag_name": "cli-v[^"]*' | grep -o '[0-9.]*' | head -n 1)
 
     if [ -z "$BW_VERSION" ]; then
@@ -68,12 +71,13 @@ if ! command -v bw &>/dev/null; then
     sudo mv "$TEMP_DIR/bw" /usr/local/bin/bw
     sudo chmod +x /usr/local/bin/bw
     rm -rf "$TEMP_DIR"
+fi
 
-    # --- Prompt for Bitwarden login if needed ---
+# --- Prompt for Bitwarden login if needed ---
+if command -v bw &>/dev/null; then
     BW_STATUS=$(bw status 2>/dev/null | yq '.status // "unauthenticated"')
 
     if [ "$BW_STATUS" = "unauthenticated" ]; then
         bw login
     fi
 fi
-
