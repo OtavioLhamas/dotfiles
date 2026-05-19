@@ -24,22 +24,24 @@ for package in "${wanted_packages[@]}"; do
     fi
 done
 
-install_cmd=""
-case "$DISTRO" in
-ubuntu | debian | pop)
-    sudo apt-get update -qq
-    install_cmd="sudo DEBIAN_FRONTEND=noninteractive apt-get install -y"
-    ;;
-fedora)
-    install_cmd="sudo dnf install -y"
-    ;;
-*)
-    echo "Unknown/unsupported distro '$DISTRO'. Cannot install '${missing_packages[*]}' automatically."
-    ;;
-esac
+if [ ! ${#missing_packages[@]} -eq 0 ]; then
+    install_cmd=""
+    case "$DISTRO" in
+    ubuntu | debian | pop)
+        sudo apt-get update -qq
+        install_cmd="sudo DEBIAN_FRONTEND=noninteractive apt-get install -y"
+        ;;
+    fedora)
+        install_cmd="sudo dnf install -y"
+        ;;
+    *)
+        echo "Unknown/unsupported distro '$DISTRO'. Cannot install '${missing_packages[*]}' automatically."
+        ;;
+    esac
 
-echo "Installing missing packages: ${missing_packages[*]}"
-$install_cmd "${missing_packages[@]}"
+    echo "Installing missing packages: ${missing_packages[*]}"
+    $install_cmd "${missing_packages[@]}"
+fi
 
 if ! command -v yq &>/dev/null; then
     # --- Install yq if missing ---
