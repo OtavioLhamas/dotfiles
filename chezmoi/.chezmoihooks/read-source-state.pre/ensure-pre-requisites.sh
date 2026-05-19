@@ -51,42 +51,27 @@ fi
 if ! command -v bw &>/dev/null; then
     # --- Install Bitwarden CLI if missing ---
     echo "Installing Bitwarden CLI (bw)..."
-    case "$DISTRO" in
-    ubuntu | debian | pop)
-        sudo apt-get install -y libsecret-1-0
-        ;;
-    fedora | rhel | rocky | almalinux)
-        sudo dnf install -y libsecret
-        ;;
-    esac
 
-    # Install bw via npm/npx or download binary
-    BW_VERSION=$(curl -s https://api.github.com/repos/bitwarden/clients/releases | grep -o '"tag_name": "cli-v[^"]*' | grep -o 'v[0-9.]*' | head -n 1)
+    BW_VERSION=$(curl -s https://api.github.com/repos/bitwarden/clients/releases | grep -o '"tag_name": "cli-v[^"]*' | grep -o '[0-9.]*' | head -n 1)
 
     if [ -z "$BW_VERSION" ]; then
-        BW_VERSION="v2026.4.1" # fallback
+        BW_VERSION="2026.4.1" # fallback
     fi
 
-    BW_URL="https://github.com/bitwarden/clients/releases/download/cli-${BW_VERSION}/bw-linux-${BW_VERSION}.zip"
+    BW_URL="https://github.com/bitwarden/clients/releases/download/cli-v${BW_VERSION}/bw-linux-${BW_VERSION}.zip"
+
     TEMP_DIR=$(mktemp -d)
     curl -sL "$BW_URL" -o "$TEMP_DIR/bw.zip"
     unzip -q "$TEMP_DIR/bw.zip" -d "$TEMP_DIR"
     sudo mv "$TEMP_DIR/bw" /usr/local/bin/bw
     sudo chmod +x /usr/local/bin/bw
     rm -rf "$TEMP_DIR"
-    echo "Bitwarden CLI installed"
-else
-    echo "Bitwarden CLI already installed"
-fi
 
-if command -v bw &>/dev/null; then
     # --- Prompt for Bitwarden login if needed ---
     BW_STATUS=$(bw status 2>/dev/null | yq '.status // "unauthenticated"')
-    if [ "$BW_STATUS" != "unlocked" ]; then
-        echo ""
-        echo "Bitwarden CLI requires login. Please run the following before chezmoi apply if you need secrets:"
-        echo "  bw login"
-        echo "  export BW_SESSION=\$(bw unlock --raw)"
-        echo ""
+
+    if [ "$BW_STATUS" = "unauthenticated" ]; then
+        bw login
     fi
 fi
+
