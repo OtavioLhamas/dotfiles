@@ -4,10 +4,10 @@
     (list "work" "personal" "gaming" "multimedia" "development") 
 -}}
 {{- $formFactor := promptChoiceOnce
-    . "formFactor" "Form factor"
+    . "form_factor" "Form factor"
     (list "desktop" "laptop" "server") -}}
 {{- $de := promptChoiceOnce
-    . "de" "Desktop environment"
+    . "desktop_environment" "Desktop environment"
     (list "gnome" "cosmic" "none") -}}
 
 data:
@@ -15,5 +15,5 @@ data:
 {{ range $categories }}
     - {{ . }}
 {{ end }}
-    form_factor:  {{ $formFactor | quote }}
-    desktop_environment: {{ $de | quote }}
+    form_factor: {{ $formFactor }}
+    desktop_environment: {{ $de }}
