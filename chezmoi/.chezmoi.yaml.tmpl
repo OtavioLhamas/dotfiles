@@ -17,3 +17,9 @@ data:
 {{ end }}
     form_factor: {{ $formFactor }}
     desktop_environment: {{ $de }}
+
+hooks:
+    read-source-state:
+        pre:
+            command: .local/share/chezmoi/chezmoi/.chezmoihooks/read-source-state.pre/ensure-pre-requisites.sh
+
