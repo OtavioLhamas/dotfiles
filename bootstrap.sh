@@ -22,7 +22,6 @@ if ! chezmoi="$(command -v chezmoi)"; then
     # Move to PATH if installed to local bin
     if [ -f "$chezmoi" ]; then
         export PATH="$chezmoi:$PATH"
-        echo "$PATH"
     fi
 
     unset chezmoi_install_script bin_dir
