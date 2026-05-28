@@ -1,0 +1,13 @@
+#!/bin/bash
+# Installs mise
+
+set -euo pipefail
+
+# Install mise (cross-platform)
+if ! command -v mise &>/dev/null; then
+    echo "Installing mise..."
+    curl https://mise.run | sh
+fi
+
+export PATH="$HOME/.local/bin:$PATH"
+
