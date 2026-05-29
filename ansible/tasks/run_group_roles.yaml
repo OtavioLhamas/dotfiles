@@ -1,0 +1,21 @@
+---
+- name: Calculate roles to run for this specific block
+  ansible.builtin.set_fact:
+    run_roles: >-
+      {{
+        ansible_run_tags if ('all' not in ansible_run_tags and ansible_run_tags | length > 0)
+        else (current_group_roles | default([])) | difference(excluded_roles | default([]))
+      }}
+
+- name: Display targeted roles for verification
+  ansible.builtin.debug:
+    var: run_roles
+
+- name: Execute roles sequentially
+  ansible.builtin.include_role:
+    name: "{{ roles_item }}"
+    apply:
+      become: "{{ ansible_os_family != 'Windows' and roles_item in become_roles }}"
+  loop: "{{ run_roles }}"
+  loop_control:
+    loop_var: roles_item

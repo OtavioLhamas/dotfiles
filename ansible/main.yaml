@@ -4,43 +4,54 @@
 
 - hosts: all
   gather_facts: yes
-  become: yes
   become_method: sudo
 
   pre_tasks:
+    # i.e. Debian, Windows, Darwin, etc.
     - name: Display OS family
       ansible.builtin.debug:
-        var: ansible_os_family
+        var: ansible_facts['os_family']
 
     - name: Group by OS family
       ansible.builtin.group_by:
-        key: "{{ ansible_os_family | lower }}"
+        key: "{{ ansible_facts['os_family'] | lower }}"
 
+    # i.e. Pop!_OS, Ubuntu, Debian, Microsoft Windows 11 Pro, etc.
     - name: Display distribution
       ansible.builtin.debug:
-        var: ansible_distribution
+        var: ansible_facts['distribution']
 
     - name: Group by distribution
       ansible.builtin.group_by:
-        key: "{{ ansible_distribution | lower }}"
+        key: "{{ ansible_facts['distribution'] | lower }}"
 
+    # i.e. Linux, Win32NT
     - name: Display system
       ansible.builtin.debug:
-        var: ansible_system
+        var: ansible_facts['system']
 
     - name: Group by system
       ansible.builtin.group_by:
-        key: "{{ ansible_system | lower }}"
+        key: "{{ ansible_facts['system'] | lower }}"
 
-  roles:
-    - role: common
-      tags: ["common"]
+  tasks:
+    - name: Process global roles
+      ansible.builtin.include_tasks: tasks/run_group_roles.yaml
+      vars:
+        current_group_roles: "{{ all_roles }}"
 
-    - role: ssh
-      tags: ["ssh"]
+- hosts: linux
 
-    - role: gnome
-      tags: ["gnome", "desktop"]
-      when:
-        - desktop_environment is defined
-        - desktop_environment == 'gnome'
+  tasks:
+    - name: Process Linux specific roles
+      ansible.builtin.include_tasks: tasks/run_group_roles.yaml
+      vars:
+        current_group_roles: "{{ linux_roles }}"
+
+- hosts: win32nt
+
+  tasks:
+    - name: Process Windows specific roles
+      ansible.builtin.include_tasks: tasks/run_group_roles.yaml
+      vars:
+        current_group_roles: "{{ win32nt_roles }}"
