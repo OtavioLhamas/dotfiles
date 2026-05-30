@@ -4,33 +4,30 @@
 
 [tools]
 # Common tools (all platforms)
-python = "latest"
-ripgrep = "latest"
-fzf = "latest"
-fd = "latest"
-zoxide = "latest"
-tlrc = "latest"
-neovim = "latest"
+"core:python" = "3.14"
+"core:rust" = "1.95"
+# "core:go" = "1.26"
+"core:node" = "26"
+"aqua:pypa/pipx" = { version = "1.12", depends = ["core:python"] }
+"ansible" = { version = "13", depends = ["aqua:pypa/pipx"], pipx_args = "--include-deps", uvx = false }
+
+# "aqua:BurntSushi/ripgrep" = "latest"
+# "aqua:junegunn/fzf" = "latest"
+# "aqua:sharkdp/fd" = "latest"
+# "aqua:ajeetdsouza/zoxide" = "latest"
+# "aqua:tldr-pages/tlrc" = "latest"
+# "aqua:neovim/neovim" = "latest"
+# "aqua:jesseduffield/lazygit" = "latest"
+
+# "cargo:dysk" = { version = "latest", depends = ["core:rust"] }
 
 # Linux-only tools
-"ubi:aristocratos/btop" = { version = "latest", os = ["linux"] }
-"ubi:bcicen/ctop" = { version = "latest", os = ["linux"] }
-"ubi:jesseduffield/lazydocker" = { version = "latest", os = ["linux"] }
-htop = { version = "latest", os = ["linux"] }
-vim = { version = "latest", os = ["linux"] }
+# "aqua:aristocratos/btop" = { version = "latest", os = ["linux"] }
+# "aqua:jesseduffield/lazydocker" = { version = "latest", os = ["linux"] }
+"conda:vim" = { version = "latest", os = ["linux"] }
 
 # Windows-only tools
 powershell = { version = "latest", os = ["windows"] }
 
-# Development category tools
-opencode = { version = "latest", if = "has 'development' .category" }
-lazygit = { version = "latest", if = "has 'development' .category" }
-rust = { version = "latest", if = "has 'development' .category" }
-go = { version = "latest", if = "has 'development' .category" }
-github-cli = { version = "latest", if = "has 'development' .category" }
-
-# Work category tools
-dotnet = { version = "latest", if = "has 'work' .category" }
-
-# Personal category tools
-yazi = { version = "latest", if = "has 'personal' .category" }
+[settings]
+idiomatic_version_file_enable_tools = ["node"]
