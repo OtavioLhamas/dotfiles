@@ -1,9 +1,20 @@
+# yaml-language-server: $schema=https://aka.ms/configuration-dsc-schema/0.2
 # WinGet Configuration File (DSC)
 # Used on Windows Native to declaratively install packages and configure settings
 # See: https://learn.microsoft.com/en-us/windows/package-manager/configuration/
 # Run with: winget configure <path>
 
 properties:
+  configurationVersion: 0.2.0
+
+  assertions:
+    - resource: Microsoft.Windows.Developer/OsVersion
+      directives:
+        description: Verify minimum OS version (Windows 11 23H2+)
+        allowPrerelease: true
+      settings:
+        MinVersion: "10.0.22631"
+
   resources:
     # --- Common Tools ---
     - resource: Microsoft.WinGet.DSC/WinGetPackage
@@ -13,29 +24,33 @@ properties:
         source: winget
 
     - resource: Microsoft.WinGet.DSC/WinGetPackage
-      id: GitHub.cli
+      id: 7zip.7zip
       settings:
-        id: GitHub.cli
+        id: 7zip.7zip
         source: winget
 
+{{- if has "personal" .categories }}
     - resource: Microsoft.WinGet.DSC/WinGetPackage
-      id: Microsoft.PowerShell
+      id: Discord.Discord
       settings:
-        id: Microsoft.PowerShell
+        id: Discord.Discord
+        source: winget
+{{- end }}
+
+{{- if has "development" .categories }}
+    # --- Development Tools ---
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: cURL.cURL
+      settings:
+        id: cURL.cURL
         source: winget
 
-    # --- Development Tools ---
     - resource: Microsoft.WinGet.DSC/WinGetPackage
       id: Microsoft.VisualStudioCode
       settings:
         id: Microsoft.VisualStudioCode
         source: winget
-
-    - resource: Microsoft.WinGet.DSC/WinGetPackage
-      id: Microsoft.DotNet.SDK.8
-      settings:
-        id: Microsoft.DotNet.SDK.8
-        source: winget
+{{- end }}
 
     # --- System Utilities ---
     - resource: Microsoft.WinGet.DSC/WinGetPackage
@@ -49,5 +64,3 @@ properties:
       settings:
         id: Microsoft.WindowsTerminal
         source: winget
-
-  configurationVersion: 0.2.0
