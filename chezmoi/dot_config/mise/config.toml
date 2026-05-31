@@ -9,7 +9,7 @@
 # "core:go" = "1.26"
 "core:node" = "26"
 "aqua:pypa/pipx" = { version = "1.12", depends = ["core:python"] }
-"ansible" = { version = "13", depends = ["aqua:pypa/pipx"], pipx_args = "--include-deps", uvx = false }
+"ansible" = { version = "13", depends = ["aqua:pypa/pipx"], pipx_args = "--include-deps", uvx = false, os = ["linux"] }
 
 # "aqua:BurntSushi/ripgrep" = "latest"
 # "aqua:junegunn/fzf" = "latest"
