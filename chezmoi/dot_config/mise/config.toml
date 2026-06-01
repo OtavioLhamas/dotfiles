@@ -8,8 +8,6 @@
 "core:rust" = "1.95"
 # "core:go" = "1.26"
 "core:node" = "26"
-"aqua:pypa/pipx" = { version = "1.12", depends = ["core:python"] }
-"ansible" = { version = "13", depends = ["aqua:pypa/pipx"], pipx_args = "--include-deps", uvx = false, os = ["linux"] }
 
 # "aqua:BurntSushi/ripgrep" = "latest"
 # "aqua:junegunn/fzf" = "latest"
@@ -22,6 +20,8 @@
 # "cargo:dysk" = { version = "latest", depends = ["core:rust"] }
 
 # Linux-only tools
+"aqua:pypa/pipx" = { version = "1.12", depends = ["core:python"], os = ["linux"] }
+"ansible" = { version = "13", depends = ["aqua:pypa/pipx"], pipx_args = "--include-deps", uvx = false, os = ["linux"] }
 # "aqua:aristocratos/btop" = { version = "latest", os = ["linux"] }
 # "aqua:jesseduffield/lazydocker" = { version = "latest", os = ["linux"] }
 "conda:vim" = { version = "latest", os = ["linux"] }
