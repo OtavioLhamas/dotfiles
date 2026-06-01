@@ -21,7 +21,17 @@ data:
 hooks:
     read-source-state:
         pre:
-            command: .local/share/chezmoi/chezmoi/.chezmoihooks/read-source-state.pre/ensure-pre-requisites.sh
+{{- if eq .chezmoi.os "linux" }}
+            command: .local/share/chezmoi/chezmoi/.chezmoihooks/.ensure-pre-requisites.sh
+{{- end }}
+{{- if eq .chezmoi.os "windows" }}
+            script: .local/share/chezmoi/chezmoi/.chezmoihooks/.ensure-pre-requisites.ps1
+{{- end }}
 
 bitwarden:
     unlock: auto
+
+interpreters:
+    ps1:
+        command: "powershell"
+        args: ["-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File"]
