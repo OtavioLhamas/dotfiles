@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-PROJECT_ROOT="$HOME/.local/share/chezmoi"
+PROJECT_ROOT="{{ .chezmoi.workingTree }}"
 ANSIBLE_DIR="$PROJECT_ROOT/ansible"
 
 export PATH="$HOME/.local/bin:$PATH"
@@ -62,13 +62,5 @@ ANSIBLE="$(mise which ansible-playbook)"
 if command -v ${ANSIBLE} &>/dev/null; then
     echo "Running Ansible playbook..."
     ${ANSIBLE} -K -i "$ANSIBLE_DIR/inventory.yaml" "$ANSIBLE_DIR/main.yaml"
-fi
-{{ end -}}
-
-{{ if eq .chezmoi.os "windows" -}}
-# --- Run WinGet DSC (Windows only) ---
-if command -v winget &>/dev/null; then
-    echo "Running WinGet DSC..."
-    winget configure "$PROJECT_ROOT/chezmoi/dot_config/winget.dsc.yaml"
 fi
 {{ end -}}
