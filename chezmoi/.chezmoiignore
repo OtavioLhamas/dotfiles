@@ -1,0 +1,12 @@
+CONTEXT.md
+
+{{- if ne .chezmoi.os "windows" }}
+dot_config/winget.dsc.yaml.tmpl
+*/*.ps1
+*/*.ps1.tmpl
+{{- end }}
+
+{{- if ne .chezmoi.os "linux" }}
+.chezmoiscripts/*.sh
+.chezmoiscripts/*.sh.tmpl
+{{- end }}
