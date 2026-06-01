@@ -44,7 +44,7 @@ cat >> "$ANSIBLE_DIR/inventory.yaml" <<EOF
     wsl:
       hosts:
         localhost:
-    windows_native:
+    windows:
       hosts:
         \${WINDOWS_IP}:
           ansible_connection: ssh

@@ -1,0 +1,37 @@
+---
+# NOTE: it might be difficult to reinstall removed apps
+- name: Remove Windows optional features
+  ansible.windows.win_powershell:
+    script: |
+      param([string]$Selector)
+
+      $removed = $false
+
+      $installed = Get-WindowsOptionalFeature -Online -ErrorAction Continue |
+        Where-Object { $_.State -notin @('Disabled', 'DisabledWithPayloadRemoved') } |
+        Where-Object { $_.FeatureName -eq $Selector }
+
+      if ($installed) {
+        foreach ($feature in $installed) {
+          try {
+            Disable-WindowsOptionalFeature -Online -FeatureName $feature.FeatureName -Remove -NoRestart -ErrorAction Continue | Out-Null
+            $removed = $true
+          } catch {
+            Write-Warning "Failed to disable $($feature.FeatureName): $_"
+          }
+        }
+      }
+
+      Write-Output $removed
+    parameters:
+      Selector: "{{ item }}"
+  loop: "{{ windows_optional_features_to_remove }}"
+  register: windows_optional_feature_removal_results
+  changed_when: item.output | default('') | trim == 'True'
+
+- name: Windows optional features removal summary
+  ansible.builtin.debug:
+    msg:
+      - "Total features checked: {{ windows_optional_feature_removal_results.results | length }}"
+      - "Features removed: {{ windows_optional_feature_removal_results.results | selectattr('changed') | list | length }}"
+      - "Features already disabled: {{ windows_optional_feature_removal_results.results | rejectattr('changed') | list | length }}"

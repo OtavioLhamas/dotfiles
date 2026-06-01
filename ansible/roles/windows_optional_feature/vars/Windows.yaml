@@ -1,0 +1,7 @@
+---
+windows_optional_features_to_remove:
+  - MediaPlayback
+  # - MicrosoftWindowsPowerShellV2Root
+  - Microsoft-RemoteDesktopConnection
+  - Recall
+  # - Microsoft-SnippingTool

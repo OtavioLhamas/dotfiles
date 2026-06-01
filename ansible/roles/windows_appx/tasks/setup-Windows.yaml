@@ -1,0 +1,50 @@
+---
+# NOTE: it might be difficult to reinstall removed apps
+- name: Remove AppX bloatware packages
+  ansible.windows.win_powershell:
+    script: |
+      param([string]$Selector)
+
+      $removed = $false
+
+      $provisioned = Get-AppxProvisionedPackage -Online -ErrorAction Continue |
+        Where-Object { $_.DisplayName -eq $Selector }
+
+      $installed = Get-AppxPackage -AllUsers -ErrorAction Continue |
+        Where-Object { $_.Name -eq $Selector }
+
+      if ($provisioned) {
+        foreach ($pkg in $provisioned) {
+          try {
+            Remove-AppxProvisionedPackage -Online -PackageName $pkg.PackageName -AllUsers -ErrorAction Continue | Out-Null
+            $removed = $true
+          } catch {
+            Write-Warning "Failed to deprovision $($pkg.PackageName): $_"
+          }
+        }
+      }
+
+      if ($installed) {
+        foreach ($pkg in $installed) {
+          try {
+            Remove-AppxPackage -Package $pkg.PackageFullName -AllUsers -ErrorAction Continue | Out-Null
+            $removed = $true
+          } catch {
+            Write-Warning "Failed to remove $($pkg.PackageFullName): $_"
+          }
+        }
+      }
+
+      Write-Output $removed
+    parameters:
+      Selector: "{{ item }}"
+  loop: "{{ appx_bloat_packages }}"
+  register: appx_removal_results
+  changed_when: item.output | default('') | trim == 'True'
+
+- name: AppX bloatware removal summary
+  ansible.builtin.debug:
+    msg:
+      - "Total packages checked: {{ appx_removal_results.results | length }}"
+      - "Packages removed: {{ appx_removal_results.results | selectattr('changed') | list | length }}"
+      - "Packages already absent: {{ appx_removal_results.results | rejectattr('changed') | list | length }}"

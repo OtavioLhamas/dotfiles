@@ -1,0 +1,20 @@
+---
+windows_capabilities_to_remove:
+  - Print.Fax.Scan
+  - Language.Handwriting
+  - Browser.InternetExplorer
+  - MathRecognizer
+  - OneCoreUAP.OneSync
+  # - OpenSSH.Client
+  # - Microsoft.Windows.MSPaint
+  # - Microsoft.Windows.PowerShell.ISE
+  - App.Support.QuickAssist
+  # - Microsoft.Windows.SnippingTool
+  - Language.Speech
+  - Language.TextToSpeech
+  - App.StepsRecorder
+  - Hello.Face.18967
+  - Hello.Face.Migration.18967
+  - Hello.Face.20134
+  # - Media.WindowsMediaPlayer
+  - Microsoft.Windows.WordPad

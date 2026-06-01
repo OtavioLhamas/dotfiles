@@ -41,17 +41,15 @@
         current_group_roles: "{{ all_roles }}"
 
 - hosts: linux
-
   tasks:
     - name: Process Linux specific roles
       ansible.builtin.include_tasks: tasks/run_group_roles.yaml
       vars:
         current_group_roles: "{{ linux_roles }}"
 
-- hosts: win32nt
-
+- hosts: windows
   tasks:
     - name: Process Windows specific roles
       ansible.builtin.include_tasks: tasks/run_group_roles.yaml
       vars:
-        current_group_roles: "{{ win32nt_roles }}"
+        current_group_roles: "{{ windows_roles }}"

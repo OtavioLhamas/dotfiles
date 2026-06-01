@@ -1,0 +1,37 @@
+---
+# NOTE: it might be difficult to reinstall removed apps
+- name: Remove Windows capabilities
+  ansible.windows.win_powershell:
+    script: |
+      param([string]$Selector)
+
+      $removed = $false
+
+      $installed = Get-WindowsCapability -Online -ErrorAction Continue |
+        Where-Object { $_.State -notin @('NotPresent', 'Removed') } |
+        Where-Object { ($_.Name -split '~')[0] -eq $Selector }
+
+      if ($installed) {
+        foreach ($cap in $installed) {
+          try {
+            Remove-WindowsCapability -Online -Name $cap.Name -ErrorAction Continue | Out-Null
+            $removed = $true
+          } catch {
+            Write-Warning "Failed to remove $($cap.Name): $_"
+          }
+        }
+      }
+
+      Write-Output $removed
+    parameters:
+      Selector: "{{ item }}"
+  loop: "{{ windows_capabilities_to_remove }}"
+  register: windows_capability_removal_results
+  changed_when: item.output | default('') | trim == 'True'
+
+- name: Windows capabilities removal summary
+  ansible.builtin.debug:
+    msg:
+      - "Total capabilities checked: {{ windows_capability_removal_results.results | length }}"
+      - "Capabilities removed: {{ windows_capability_removal_results.results | selectattr('changed') | list | length }}"
+      - "Capabilities already absent: {{ windows_capability_removal_results.results | rejectattr('changed') | list | length }}"

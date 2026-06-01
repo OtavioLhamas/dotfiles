@@ -1,0 +1,5 @@
+---
+windows_roles:
+  - windows_appx
+  - windows_capability
+  - windows_optional_feature
