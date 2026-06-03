@@ -1,0 +1,13 @@
+---
+- name: Install flatpak
+  ansible.builtin.package:
+    name: flatpak
+    state: present
+
+- name: Configure flatpak remotes
+  community.general.flatpak_remote:
+    name: "{{ item.name }}"
+    flatpakrepo_url: "{{ item.flatpakrepo_url }}"
+    method: "{{ item.method | default('system') }}"
+    state: "{{ item.state | default('present') }}"
+  loop: "{{ flatpak_remotes }}"
