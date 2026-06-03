@@ -15,7 +15,7 @@
   ansible.builtin.include_role:
     name: "{{ roles_item }}"
     apply:
-      become: "{{ ansible_os_family != 'Windows' and roles_item in become_roles }}"
+      become: "{{ ansible_facts['os_family'] != 'Windows' and roles_item in become_roles }}"
   loop: "{{ run_roles }}"
   loop_control:
     loop_var: roles_item
