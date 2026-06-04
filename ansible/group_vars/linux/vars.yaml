@@ -1,9 +1,11 @@
-# Group variables for all Linux hosts
-# Common packages and settings for Linux distributions
+---
+linux_roles:
+  - flatpak
+  - discord
+  - geerlingguy.docker
+  - fish
 
-linux_common_packages:
-  - htop
-  - vim
-  - git
-  - curl
-  - jq
+become_roles:
+  - geerlingguy.docker
+  - flatpak
+  - fish
