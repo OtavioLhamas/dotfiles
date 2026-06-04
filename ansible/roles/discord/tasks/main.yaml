@@ -1,0 +1,25 @@
+---
+- name: Load variables.
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_facts['distribution'] }}-{{ ansible_facts['distribution_version'] }}.yaml"
+        - "{{ ansible_facts['distribution'] }}-{{ ansible_facts['distribution_major_version'] }}.yaml"
+        - "{{ ansible_facts['distribution'] }}.yaml"
+        - "{{ ansible_facts['os_family'] }}.yaml"
+        - main.yaml
+      paths:
+        - '{{ role_path }}/vars'
+      skip: false
+
+- name: Include system appropriate tasks.
+  ansible.builtin.include_tasks: "{{ item }}"
+  with_first_found:
+    - files:
+        - "setup-{{ ansible_facts['distribution'] }}-{{ ansible_facts['distribution_version'] }}.yaml"
+        - "setup-{{ ansible_facts['distribution'] }}-{{ ansible_facts['distribution_major_version'] }}.yaml"
+        - "setup-{{ ansible_facts['distribution'] }}.yaml"
+        - "setup-{{ ansible_facts['os_family'] }}.yaml"
+      paths: "{{ role_path }}/tasks"
+      skip: true
+
