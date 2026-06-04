@@ -1,0 +1,14 @@
+---
+- name: Add fish PPA
+  ansible.builtin.apt_repository:
+    repo: "{{ fish_ppa }}"
+    state: present
+    update_cache: true
+  become: true
+
+- name: Install fish
+  ansible.builtin.apt:
+    name: "{{ fish_package }}{% if fish_version != 'latest' %}={{ fish_version }}{% endif %}"
+    state: present
+    allow_downgrade: "{{ fish_version != 'latest' }}"
+  become: true

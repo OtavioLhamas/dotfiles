@@ -1,0 +1,16 @@
+---
+- name: Add fish OBS repository
+  ansible.builtin.get_url:
+    url: "{{ fish_obs_repo_file }}"
+    dest: /etc/yum.repos.d/fish-obs.repo
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+
+- name: Install fish
+  ansible.builtin.dnf:
+    name: "{{ fish_package }}{% if fish_version != 'latest' %}-{{ fish_version }}{% endif %}"
+    state: present
+    allow_downgrade: "{{ fish_version != 'latest' }}"
+  become: true

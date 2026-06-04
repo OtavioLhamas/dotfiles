@@ -1,0 +1,6 @@
+---
+fish_obs_repo_url: https://download.opensuse.org/repositories/shells:/fish:/release:/4/Debian_13
+fish_obs_gpg_key_url: https://download.opensuse.org/repositories/shells:fish:release:4/Debian_13/Release.key
+fish_obs_gpg_key_path: /etc/apt/keyrings/fish-obs.asc
+fish_obs_suite: Debian_13
+fish_package: fish
