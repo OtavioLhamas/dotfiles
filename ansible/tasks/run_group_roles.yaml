@@ -1,5 +1,5 @@
 ---
-- name: Calculate roles to run for this specific block
+- name: Calculate roles to run
   ansible.builtin.set_fact:
     run_roles: >-
       {{
@@ -7,7 +7,7 @@
         else (current_group_roles | default([])) | difference(excluded_roles | default([]))
       }}
 
-- name: Display targeted roles for verification
+- name: Display targeted roles
   ansible.builtin.debug:
     var: run_roles
 
