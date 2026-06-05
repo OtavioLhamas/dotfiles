@@ -15,6 +15,8 @@ wanted_packages=(
     curl
     wget
     git
+    gcc
+    make
 )
 
 missing_packages=()
@@ -77,7 +79,7 @@ fi
 if command -v bw &>/dev/null; then
     BW_STATUS=$(bw status 2>/dev/null | yq '.status // "unauthenticated"')
 
-    if [ "$BW_STATUS" = "unauthenticated" ]; then
-        bw login
-    fi
+    # if [ "$BW_STATUS" = "unauthenticated" ]; then
+    #     bw login
+    # fi
 fi
