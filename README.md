@@ -1,16 +1,9 @@
 # Dotfiles Management System
 
+> [!WARNING]
+> This is a work in progress, current commit might be in a broken state
+
 A dotfiles and system configuration management project using **chezmoi**, **mise**, and **Ansible**, with the goal to create an idempotent, declarative setup that allows easy reproduction.
-
-
-## Architecture
-
-| Tool | Purpose |
-| ------ | --------- |
-| **chezmoi** | Dotfiles management, machine classification prompts, bootstrap orchestration |
-| **mise** | User-space development tool installation (languages, CLI tools) |
-| **Ansible** | System-wide configuration, services, desktop environment settings |
-| **WinGet DSC** | Windows native declarative package/configuration management |
 
 ## Quick Start
 
@@ -41,6 +34,15 @@ These are the specific versions I validated:
 - WSL (Windows Subsystem for Linux)
 
 - Desktop Environments: GNOME, COSMIC
+
+## Architecture
+
+| Tool | Purpose |
+| ------ | --------- |
+| **chezmoi** | Dotfiles management, machine classification prompts, bootstrap orchestration |
+| **mise** | User-space development tool installation (languages, CLI tools) |
+| **Ansible** | System-wide configuration, services, desktop environment settings |
+| **WinGet DSC** | Windows native declarative package/configuration management |
 
 ## Testing
 
