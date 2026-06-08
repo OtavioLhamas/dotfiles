@@ -3,31 +3,37 @@
 # See: https://mise.jdx.dev/registry.html
 
 [tools]
-# Common tools (all platforms)
+# --- Common tools (all platforms) ---
 "core:python" = "3.14"
 "core:rust" = "1.95"
-# "core:go" = "1.26"
 "core:node" = "26"
+"vfox:mise-plugins/vfox-lua" = "5.5"
 
 # "aqua:BurntSushi/ripgrep" = "latest"
 # "aqua:junegunn/fzf" = "latest"
 # "aqua:sharkdp/fd" = "latest"
-# "aqua:ajeetdsouza/zoxide" = "latest"
+"aqua:ajeetdsouza/zoxide" = "latest"
 # "aqua:tldr-pages/tlrc" = "latest"
 # "aqua:neovim/neovim" = "latest"
-# "aqua:jesseduffield/lazygit" = "latest"
+"aqua:restic/restic" = "latest"
 
-# "cargo:dysk" = { version = "latest", depends = ["core:rust"] }
+"cargo:dysk" = { version = "latest", depends = ["core:rust"] }
 
-# Linux-only tools
+# --- Linux-only tools ---
 "aqua:pypa/pipx" = { version = "1.12", depends = ["core:python"], os = ["linux"] }
 "ansible" = { version = "13", depends = ["aqua:pypa/pipx"], pipx_args = "--include-deps", uvx = false, os = ["linux"] }
 # "aqua:aristocratos/btop" = { version = "latest", os = ["linux"] }
-# "aqua:jesseduffield/lazydocker" = { version = "latest", os = ["linux"] }
 "conda:vim" = { version = "latest", os = ["linux"] }
 
-# Windows-only tools
+# --- Windows-only tools ---
 powershell = { version = "latest", os = ["windows"] }
+
+{{- if has "development" .categories }}
+# --- Development-only tools ---
+# "core:go" = "1.26"
+# "aqua:jesseduffield/lazygit" = "latest"
+# "aqua:jesseduffield/lazydocker" = { version = "latest", os = ["linux"] }
+{{- end}}
 
 [settings]
 idiomatic_version_file_enable_tools = ["node"]
