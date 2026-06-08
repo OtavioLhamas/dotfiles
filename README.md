@@ -2,12 +2,6 @@
 
 A dotfiles and system configuration management project using **chezmoi**, **mise**, and **Ansible**, with the goal to create an idempotent, declarative setup that allows easy reproduction.
 
-## Supported Platforms
-
-- Linux (Debian, Ubuntu, Pop!\_OS, Fedora)
-- Windows 11 Native
-- WSL (Windows Subsystem for Linux)
-- Multiple Desktop Environments: GNOME, COSMIC, KDE
 
 ## Architecture
 
@@ -31,6 +25,22 @@ A dotfiles and system configuration management project using **chezmoi**, **mise
 ```powershell
 .\bootstrap.ps1
 ```
+
+## Supported Platforms
+
+Should work on any Debian, Ubuntu, or Fedora based distro, and Windows 11.
+
+These are the specific versions I validated:
+
+- Debian 13
+- Ubuntu 24.04
+- Ubuntu Server 24.04
+- Pop!\_OS 22.04, 24.04
+- Fedora 44
+- Windows 11 25H2
+- WSL (Windows Subsystem for Linux)
+
+- Desktop Environments: GNOME, COSMIC
 
 ## Testing
 
