@@ -1,14 +1,5 @@
 ---
-- name: Install flatpak
-  ansible.builtin.package:
-    name: flatpak
-    state: present
-  become: true
-
-- name: Configure flatpak remotes
-  community.general.flatpak_remote:
-    name: "{{ item.name }}"
-    flatpakrepo_url: "{{ item.flatpakrepo_url }}"
-    method: "{{ item.method | default('system') }}"
-    state: "{{ item.state | default('present') }}"
-  loop: "{{ flatpak_remotes }}"
+- name: Include flatpak installation task
+  ansible.builtin.include_tasks: install-flatpak.yaml
+- name: Include flatpak remotes task
+  ansible.builtin.include_tasks: add-remotes.yaml

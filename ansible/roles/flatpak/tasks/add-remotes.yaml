@@ -1,0 +1,10 @@
+---
+- name: Configure flatpak remotes
+  community.general.flatpak_remote:
+    name: "{{ remote.name }}"
+    flatpakrepo_url: "{{ remote.flatpakrepo_url }}"
+    method: "{{ remote.method | default('system') }}"
+    state: "{{ remote.state | default('present') }}"
+  loop: "{{ flatpak_remotes }}"
+  loop_control:
+    loop_var: remote
