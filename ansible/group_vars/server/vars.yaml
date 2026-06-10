@@ -1,0 +1,8 @@
+---
+excluded_roles:
+  - discord
+  - flatpak
+  - spotify
+  - stremio
+  - obsidian
+  - qbittorrent
