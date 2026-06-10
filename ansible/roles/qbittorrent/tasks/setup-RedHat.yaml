@@ -1,0 +1,6 @@
+---
+- name: Install qBittorrent via flatpak
+  community.general.flatpak:
+    name: org.qbittorrent.qBittorrent
+    state: present
+    method: system

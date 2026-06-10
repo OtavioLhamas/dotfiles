@@ -77,6 +77,7 @@ properties:
         id: Obsidian.Obsidian
         source: winget
 
+
     # --- System Utilities ---
     - resource: PSDscResources/WindowsOptionalFeature
       name: VirtualMachinePlatform
@@ -125,6 +126,14 @@ properties:
         securityContext: current
       settings:
         id: Stremio.Stremio
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: qBittorrent
+      directives:
+        securityContext: elevated
+      settings:
+        id: qBittorrent.qBittorrent
         source: winget
 {{- end }}
 
