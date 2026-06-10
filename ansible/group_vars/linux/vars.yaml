@@ -1,7 +1,6 @@
 ---
 linux_roles:
   - flatpak
-  - discord
   - geerlingguy.docker
   - fish
   - obsidian

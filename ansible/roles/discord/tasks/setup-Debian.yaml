@@ -4,3 +4,4 @@
     name: com.discordapp.Discord
     state: present
     method: system
+  become: true
