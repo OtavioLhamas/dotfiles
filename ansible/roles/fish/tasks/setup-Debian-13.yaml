@@ -1,25 +1,12 @@
 ---
-# - name: Install python3-debian for deb822_repository
-#   ansible.builtin.apt:
-#     name: python3-debian
-#     state: present
-#   become: true
-
-- name: Download fish OBS GPG key
-  ansible.builtin.get_url:
-    url: "{{ fish_obs_gpg_key_url }}"
-    dest: "{{ fish_obs_gpg_key_path }}"
-    mode: "0644"
-  become: true
-
-- name: Add fish OBS repository
+- name: Add fish repository with key
   ansible.builtin.deb822_repository:
     name: fish-obs
     types: deb
-    uris: "{{ fish_obs_repo_url }}"
+    uris: "{{ fish_apt_repo_url }}"
     suites: "{{ fish_obs_suite }}"
-    components: ""
-    signed_by: "{{ fish_obs_gpg_key_path }}"
+    components: []
+    signed_by: "{{ fish_apt_key_url }}"
     state: present
   become: true
 
