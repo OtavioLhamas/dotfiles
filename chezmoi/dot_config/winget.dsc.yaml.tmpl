@@ -23,55 +23,73 @@ properties:
     # --- Common Tools ---
     - resource: Microsoft.WinGet.DSC/WinGetPackage
       id: Git
+      directives:
+        securityContext: elevated
       settings:
         id: Git.Git
         source: winget
 
     - resource: Microsoft.WinGet.DSC/WinGetPackage
       id: WindowsTerminal
+      directives:
+        securityContext: elevated
       settings:
         id: Microsoft.WindowsTerminal
         source: winget
 
     - resource: Microsoft.WinGet.DSC/WinGetPackage
       id: 7zip
+      directives:
+        securityContext: elevated
       settings:
         id: 7zip.7zip
         source: winget
 
     - resource: Microsoft.WinGet.DSC/WinGetPackage
-      id: Firefox
-      settings:
-        id: Mozilla.Firefox
-        source: winget
-
-    - resource: Microsoft.WinGet.DSC/WinGetPackage
       id: Notepad++
+      directives:
+        securityContext: elevated
       settings:
         id: Notepad++.Notepad++
         source: winget
 
     - resource: Microsoft.WinGet.DSC/WinGetPackage
       id: PowerToys
+      directives:
+        securityContext: elevated
       settings:
         id: Microsoft.PowerToys
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Firefox
+      directives:
+        securityContext: current
+      settings:
+        id: Mozilla.Firefox
         source: winget
 
     # --- System Utilities ---
     - resource: PSDscResources/WindowsOptionalFeature
       name: VirtualMachinePlatform
+      directives:
+        securityContext: elevated
       settings:
         Name: VirtualMachinePlatform
         Ensure: Present
 
     - resource: PSDscResources/WindowsOptionalFeature
       name: Microsoft-Windows-Subsystem-Linux
+      directives:
+        securityContext: elevated
       settings:
         Name: Microsoft-Windows-Subsystem-Linux
         Ensure: Present
 
     - resource: Microsoft.Windows.Developer/WindowsCapability
       name: OpenSSH.Server
+      directives:
+        securityContext: elevated
       settings:
         name: OpenSSH.Server~~~~0.0.1.0
         ensure: Present
@@ -79,18 +97,24 @@ properties:
 {{- if has "personal" .categories }}
     - resource: Microsoft.WinGet.DSC/WinGetPackage
       id: Discord
+      directives:
+        securityContext: current
       settings:
         id: Discord.Discord
         source: winget
 
     - resource: Microsoft.WinGet.DSC/WinGetPackage
       id: Spotify
+      directives:
+        securityContext: current
       settings:
         id: Spotify.Spotify
         source: winget
 
     - resource: Microsoft.WinGet.DSC/WinGetPackage
       id: Stremio
+      directives:
+        securityContext: current
       settings:
         id: Stremio.Stremio
         source: winget
@@ -100,6 +124,8 @@ properties:
     # --- Development Tools ---
     - resource: Microsoft.WinGet.DSC/WinGetPackage
       id: cURL
+      directives:
+        securityContext: elevated
       settings:
         id: cURL.cURL
         source: winget
