@@ -5,6 +5,7 @@ linux_roles:
   - fish
   - htop
   - kitty
+  - rsync
   - obsidian
 
 become_roles:

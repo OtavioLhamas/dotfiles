@@ -1,0 +1,6 @@
+---
+- name: Install rsync
+  ansible.builtin.apt:
+    name: "{{ rsync_package }}"
+    state: present
+  become: true

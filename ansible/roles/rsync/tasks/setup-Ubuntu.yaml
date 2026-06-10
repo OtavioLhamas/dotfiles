@@ -1,0 +1,13 @@
+---
+- name: Add rsync PPA
+  ansible.builtin.apt_repository:
+    repo: "{{ rsync_ppa }}"
+    state: present
+    update_cache: true
+  become: true
+
+- name: Install rsync
+  ansible.builtin.apt:
+    name: "{{ rsync_package }}"
+    state: present
+  become: true
