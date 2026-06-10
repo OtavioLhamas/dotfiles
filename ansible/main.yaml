@@ -53,3 +53,10 @@
       ansible.builtin.include_tasks: tasks/run_group_roles.yaml
       vars:
         current_group_roles: "{{ windows_roles }}"
+
+- hosts: personal
+  tasks:
+    - name: Process Personal specific roles
+      ansible.builtin.include_tasks: tasks/run_group_roles.yaml
+      vars:
+        current_group_roles: "{{ personal_roles }}"
