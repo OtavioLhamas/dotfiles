@@ -13,11 +13,12 @@
 # "aqua:junegunn/fzf" = "latest"
 # "aqua:sharkdp/fd" = "latest"
 "aqua:ajeetdsouza/zoxide" = "latest"
-# "aqua:tldr-pages/tlrc" = "latest"
+"aqua:tldr-pages/tlrc" = "latest"
 # "aqua:neovim/neovim" = "latest"
 "aqua:restic/restic" = "latest"
+"conda:make" = "latest"
 
-"cargo:dysk" = { version = "latest", depends = ["core:rust"] }
+"cargo:dysk" = { version = "latest", depends = ["core:rust", "conda:make"] }
 
 # --- Linux-only tools ---
 "aqua:pypa/pipx" = { version = "1.12", depends = ["core:python"], os = ["linux"] }
