@@ -1,0 +1,10 @@
+---
+galaxy_info:
+  author: ""
+  description: ""
+  license: ""
+  min_ansible_version: ""
+  platforms: []
+  galaxy_tags: []
+dependencies:
+  - role: flatpak
