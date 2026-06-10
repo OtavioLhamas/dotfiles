@@ -69,6 +69,14 @@ properties:
         id: Mozilla.Firefox
         source: winget
 
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Obsidian
+      directives:
+        securityContext: current
+      settings:
+        id: Obsidian.Obsidian
+        source: winget
+
     # --- System Utilities ---
     - resource: PSDscResources/WindowsOptionalFeature
       name: VirtualMachinePlatform

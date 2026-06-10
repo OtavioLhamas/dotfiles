@@ -4,6 +4,7 @@ linux_roles:
   - discord
   - geerlingguy.docker
   - fish
+  - obsidian
 
 become_roles:
   - geerlingguy.docker
