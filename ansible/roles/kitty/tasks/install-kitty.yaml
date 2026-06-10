@@ -1,0 +1,67 @@
+---
+- name: Download kitty installer script
+  ansible.builtin.get_url:
+    url: "{{ kitty_installer_url }}"
+    dest: /tmp/kitty_installer.sh
+    mode: "0755"
+
+- name: Run kitty installer
+  ansible.builtin.command:
+    cmd: "/tmp/kitty_installer.sh launch=n dest={{ kitty_install_dir }}"
+    creates: "{{ kitty_install_dir }}/kitty.app/bin/kitty"
+
+- name: Create symlink for kitty binary
+  ansible.builtin.file:
+    src: "{{ kitty_install_dir }}/kitty.app/bin/kitty"
+    dest: "{{ ansible_facts['user_dir'] }}/.local/bin/kitty"
+    state: link
+
+- name: Create symlink for kitten binary
+  ansible.builtin.file:
+    src: "{{ kitty_install_dir }}/kitty.app/bin/kitten"
+    dest: "{{ ansible_facts['user_dir'] }}/.local/bin/kitten"
+    state: link
+
+# --- Create the desktop entry
+- name: Ensure applications directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['user_dir'] }}/.local/share/applications"
+    state: directory
+    mode: "0755"
+
+- name: Add kitty.desktop to applications menu
+  ansible.builtin.copy:
+    src: "{{ kitty_install_dir }}/kitty.app/share/applications/kitty.desktop"
+    dest: "{{ ansible_facts['user_dir'] }}/.local/share/applications/kitty.desktop"
+    mode: "0644"
+    force: false
+
+- name: Find all local kitty desktop files
+  ansible.builtin.find:
+    paths: "{{ ansible_facts['user_dir'] }}/.local/share/applications"
+    patterns: "kitty*.desktop"
+  register: kitty_desktop_files
+
+- name: Ensure correct path to the Kitty icon
+  ansible.builtin.lineinfile:
+    path: "{{ file.path }}"
+    regexp: "^Icon="
+    line: "Icon={{ kitty_install_dir }}/kitty.app/share/icons/hicolor/256x256/apps/kitty.png"
+    state: present
+  loop: "{{ kitty_desktop_files.files }}"
+  loop_control:
+    loop_var: file
+  # Only execute if the find task actually caught matching files
+  when: kitty_desktop_files.matched > 0
+
+- name: Ensure correct execution path for Kitty binary
+  ansible.builtin.lineinfile:
+    path: "{{ file.path }}"
+    regexp: "^Exec="
+    line: "Exec={{ kitty_install_dir }}/kitty.app/bin/kitty"
+    state: present
+  loop: "{{ kitty_desktop_files.files }}"
+  loop_control:
+    loop_var: file
+  # Only execute if the find task actually caught matching files
+  when: kitty_desktop_files.matched > 0

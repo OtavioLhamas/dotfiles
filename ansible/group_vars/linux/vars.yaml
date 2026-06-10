@@ -3,6 +3,7 @@ linux_roles:
   - flatpak
   - geerlingguy.docker
   - fish
+  - kitty
   - obsidian
 
 become_roles:
