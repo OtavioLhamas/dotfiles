@@ -1,0 +1,6 @@
+---
+- name: Install PrismLauncher via flatpak
+  community.general.flatpak:
+    name: org.prismlauncher.PrismLauncher
+    state: present
+    method: system
