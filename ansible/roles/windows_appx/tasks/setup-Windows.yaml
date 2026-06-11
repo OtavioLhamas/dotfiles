@@ -37,10 +37,15 @@
 
       Write-Output $removed
     parameters:
-      Selector: "{{ item }}"
+      Selector: "{{ appx }}"
   loop: "{{ appx_bloat_packages }}"
+  loop_control:
+    loop_var: appx
   register: appx_removal_results
-  changed_when: item.output | default('') | trim == 'True'
+  changed_when: appx_removal_results.output[0]
+  become: true
+  become_method: runas
+  become_user: otavio
 
 - name: AppX bloatware removal summary
   ansible.builtin.debug:

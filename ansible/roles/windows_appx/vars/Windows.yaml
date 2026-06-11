@@ -43,7 +43,7 @@ appx_bloat_packages:
   - Microsoft.WindowsSoundRecorder
   - Microsoft.Wallet
   - Microsoft.BingWeather
-  - Microsoft.WindowsTerminal
+  # - Microsoft.WindowsTerminal
   - Microsoft.Xbox.TCUI
   - Microsoft.XboxApp
   - Microsoft.XboxGameOverlay

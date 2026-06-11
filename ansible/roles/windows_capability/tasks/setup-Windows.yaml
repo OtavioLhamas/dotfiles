@@ -24,14 +24,19 @@
 
       Write-Output $removed
     parameters:
-      Selector: "{{ item }}"
+      Selector: "{{ capability }}"
   loop: "{{ windows_capabilities_to_remove }}"
-  register: windows_capability_removal_results
-  changed_when: item.output | default('') | trim == 'True'
+  loop_control:
+    loop_var: capability
+  register: capability_removal_results
+  changed_when: capability_removal_results.output[0]
+  become: true
+  become_method: runas
+  become_user: otavio
 
 - name: Windows capabilities removal summary
   ansible.builtin.debug:
     msg:
-      - "Total capabilities checked: {{ windows_capability_removal_results.results | length }}"
-      - "Capabilities removed: {{ windows_capability_removal_results.results | selectattr('changed') | list | length }}"
-      - "Capabilities already absent: {{ windows_capability_removal_results.results | rejectattr('changed') | list | length }}"
+      - "Total capabilities checked: {{ capability_removal_results.results | length }}"
+      - "Capabilities removed: {{ capability_removal_results.results | selectattr('changed') | list | length }}"
+      - "Capabilities already absent: {{ capability_removal_results.results | rejectattr('changed') | list | length }}"

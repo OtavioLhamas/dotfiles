@@ -9,7 +9,7 @@
         - "{{ ansible_facts['os_family'] }}.yaml"
         - main.yaml
       paths:
-        - '{{ role_path }}/vars'
+        - "{{ role_path }}/vars"
       skip: false
 
 - name: Include system appropriate tasks.
@@ -20,6 +20,6 @@
         - "setup-{{ ansible_facts['distribution'] }}-{{ ansible_facts['distribution_major_version'] }}.yaml"
         - "setup-{{ ansible_facts['distribution'] }}.yaml"
         - "setup-{{ ansible_facts['os_family'] }}.yaml"
-      paths: "{{ role_path }}/tasks"
+      paths:
+        - "{{ role_path }}/tasks"
       skip: true
-

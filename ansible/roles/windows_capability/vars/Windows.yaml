@@ -17,4 +17,4 @@ windows_capabilities_to_remove:
   - Hello.Face.Migration.18967
   - Hello.Face.20134
   # - Media.WindowsMediaPlayer
-  - Microsoft.Windows.WordPad
+  # - Microsoft.Windows.WordPad
