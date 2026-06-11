@@ -1,7 +1,0 @@
-# Group variables for development machines
-
-dev_packages:
-  - docker.io
-  - docker-compose
-  - nodejs
-  - npm

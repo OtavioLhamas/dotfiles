@@ -1,6 +1,0 @@
-# Group variables for Fedora/RHEL hosts
-
-fedora_common_packages:
-  - dnf-plugins-core
-  - fedora-workstation-repositories
-  - @development-tools
