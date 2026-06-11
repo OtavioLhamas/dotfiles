@@ -1,6 +1,3 @@
-# Group variables for gaming machines
-
-gaming_packages:
-  - steam-installer
-  - lutris
-  - mangohud
+---
+gaming_roles:
+  - prismlauncher
