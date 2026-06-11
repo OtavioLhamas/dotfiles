@@ -60,3 +60,10 @@
       ansible.builtin.include_tasks: tasks/run_group_roles.yaml
       vars:
         current_group_roles: "{{ personal_roles }}"
+
+- hosts: gaming
+  tasks:
+    - name: Process Gaming specific roles
+      ansible.builtin.include_tasks: tasks/run_group_roles.yaml
+      vars:
+        current_group_roles: "{{ gaming_roles }}"
