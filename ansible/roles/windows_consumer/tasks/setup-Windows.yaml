@@ -1,0 +1,8 @@
+---
+- name: DisableWindowsConsumerFeatures
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent
+    name: DisableWindowsConsumerFeatures
+    data: "{{ disable_consumer_features | ternary('1', omit) }}"
+    type: dword
+    state: "{{ disable_consumer_features | ternary('present', 'absent') }}"

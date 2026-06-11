@@ -1,0 +1,41 @@
+---
+- name: Configure hibernation settings
+  become: true
+  become_method: runas
+  become_user: otavio
+  block:
+    - name: Set HibernateEnabled registry key
+      ansible.windows.win_regedit:
+        path: HKLM:\System\CurrentControlSet\Control\Session Manager\Power
+        name: HibernateEnabled
+        data: "{{ hibernation_enabled | ternary(1, 0) }}"
+        type: dword
+        state: present
+
+    - name: Set ShowHibernateOption registry key
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FlyoutMenuSettings
+        name: ShowHibernateOption
+        data: "{{ hibernation_enabled | ternary(1, 0) }}"
+        type: dword
+        state: present
+
+    - name: Apply hibernation power state via powercfg
+      ansible.windows.win_powershell:
+        script: |
+          param([bool]$Enabled)
+
+          $expected = if ($Enabled) { "on" } else { "off" }
+          $opposite = if ($Enabled) { "off" } else { "on" }
+          $active = (powercfg /a 2>&1 | Select-String "The hiberfile type is").Count -gt 0
+
+          if ($Enabled -eq $active) {
+            Write-Output $false
+          } else {
+            powercfg /hibernate $expected
+            Write-Output $true
+          }
+        parameters:
+          Enabled: "{{ hibernation_enabled }}"
+      changed_when: "hibernation_powercfg_result.output[0]"
+      register: hibernation_powercfg_result
