@@ -24,14 +24,16 @@
 
       Write-Output $removed
     parameters:
-      Selector: "{{ item }}"
+      Selector: "{{ feature }}"
   loop: "{{ windows_optional_features_to_remove }}"
-  register: windows_optional_feature_removal_results
-  changed_when: item.output | default('') | trim == 'True'
+  loop_control:
+    loop_var: feature
+  register: feature_removal_results
+  changed_when: feature_removal_results.output[0]
 
 - name: Windows optional features removal summary
   ansible.builtin.debug:
     msg:
-      - "Total features checked: {{ windows_optional_feature_removal_results.results | length }}"
-      - "Features removed: {{ windows_optional_feature_removal_results.results | selectattr('changed') | list | length }}"
-      - "Features already disabled: {{ windows_optional_feature_removal_results.results | rejectattr('changed') | list | length }}"
+      - "Total features checked: {{ feature_removal_results.results | length }}"
+      - "Features removed: {{ feature_removal_results.results | selectattr('changed') | list | length }}"
+      - "Features already disabled: {{ feature_removal_results.results | rejectattr('changed') | list | length }}"
