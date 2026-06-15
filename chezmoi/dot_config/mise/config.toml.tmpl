@@ -3,8 +3,8 @@
 # See: https://mise.jdx.dev/registry.html
 
 [tools]
-# --- Common tools (all platforms) ---
 "core:python" = "3.14"
+### Common tools (all platforms) ###
 "core:rust" = "1.95"
 "core:node" = "26"
 "core:java" = "latest"
@@ -20,23 +20,27 @@
 "aqua:restic/restic" = "latest"
 "conda:make" = "latest"
 "aqua:starship/starship" = "latest"
-
 "cargo:dysk" = { version = "latest", depends = ["core:rust", "conda:make"] }
 
-# --- Linux-only tools ---
+###
+
+### Linux-only tools ###
 "aqua:pypa/pipx" = { version = "1.12", depends = ["core:python"], os = ["linux"] }
 "ansible" = { version = "13", depends = ["aqua:pypa/pipx"], pipx_args = "--include-deps", uvx = false, os = ["linux"] }
 # "aqua:aristocratos/btop" = { version = "latest", os = ["linux"] }
 "conda:vim" = { version = "latest", os = ["linux"] }
+###
 
-# --- Windows-only tools ---
+### Windows-only tools ###
 powershell = { version = "latest", os = ["windows"] }
+###
 
 {{- if has "development" .categories }}
-# --- Development-only tools ---
+### Development-only tools ###
 # "core:go" = "1.26"
 # "aqua:jesseduffield/lazygit" = "latest"
 # "aqua:jesseduffield/lazydocker" = { version = "latest", os = ["linux"] }
+###
 {{- end}}
 
 [settings]
