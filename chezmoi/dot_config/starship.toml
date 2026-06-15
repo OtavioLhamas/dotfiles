@@ -1,0 +1,210 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+### Base options ###
+format = """
+$shell\
+$directory\
+${custom.giturl}\
+$git_branch\
+$git_status\
+$character"""
+
+right_format = """
+$status\
+$cmd_duration\
+$bun\
+$c\
+$cmake\
+$cpp\
+$deno\
+$docker_context\
+$dotnet\
+$golang\
+$java\
+$lua\
+$nodejs\
+$python\
+$rust\
+$battery\
+$time"""
+
+palette = "catppuccin_mocha"
+add_newline = false
+
+###
+
+### Prompt ###
+[character]
+format = "$symbol "
+success_symbol = "[❯](green)"
+error_symbol = "[❯](red)"
+vimcmd_symbol = "[❮](cyan)"
+
+[cmd_duration]
+min_time = 100 # in milliseconds
+show_milliseconds = true
+
+[directory]
+style = 'teal'
+truncation_length = 4
+truncate_to_repo = false
+
+[git_branch]
+symbol = "[](base) "
+style = "fg:lavender bg:base"
+format =  " [$symbol$branch]($style)[](base)"
+
+[git_status]
+format = "[$ahead_behind$stashed$untracked$staged$modified$renamed$deleted$conflicted ]($style)"
+ahead      = "[⇡${count}](teal)"
+behind     = "[⇣${count}](peach)"
+staged     = "[+${count}](green)"
+modified   = "[!${count}](yellow)"
+renamed    = "[»${count}](blue)"
+deleted    = "[-${count}](red)"
+untracked  = "[?${count}](red)"
+stashed    = "[≡${count}](lavender)"
+conflicted = "[✖${count}](red bold)"
+diverged   = "[⇕⇡${ahead_count}⇣${behind_count}](mauve)"
+
+[custom.giturl]
+description = "Display symbol for remote Git server"
+command = """
+GIT_REMOTE=$(command git ls-remote --get-url 2> /dev/null)
+if [[ "$GIT_REMOTE" =~ "github" ]]; then
+    GIT_REMOTE_SYMBOL=" "
+elif [[ "$GIT_REMOTE" =~ "gitlab" ]]; then
+    GIT_REMOTE_SYMBOL=" "
+elif [[ "$GIT_REMOTE" =~ "bitbucket" ]]; then
+    GIT_REMOTE_SYMBOL=" "
+elif [[ "$GIT_REMOTE" =~ "git" ]]; then
+    GIT_REMOTE_SYMBOL=" "
+else
+    GIT_REMOTE_SYMBOL=" "
+fi
+echo "$GIT_REMOTE_SYMBOL "
+"""
+shell = 'bash'
+when = "git rev-parse --is-inside-work-tree 2> /dev/null"
+format = '$output'
+require_repo = true
+ignore_timeout = true
+
+[os]
+disabled = true
+format = "[$symbol](#blue) "
+
+[os.symbols]
+Debian = "󰣚"
+Fedora = "󰣛"
+Pop = ""
+Ubuntu = "󰕈"
+Windows = "󰍲"
+SUSE = ""
+Raspbian = "󰐿"
+Mint = "󰣭"
+Macos = ""
+Manjaro = ""
+Linux = "󰌽"
+Gentoo = "󰣨"
+Alpine = ""
+Amazon = ""
+Android = ""
+Arch = "󰣇"
+Artix = "󰣇"
+CentOS = ""
+Redhat = "󱄛"
+RedHatEnterprise = "󱄛"
+
+[shell]
+disabled = true
+
+[status]
+disabled = false
+pipestatus = true
+format = '[($symbol$int )]($style)'
+symbol = '✘'
+pipestatus_format = '\[$pipestatus\]($style)'
+
+### Color palettes ###
+[palettes.catppuccin_mocha]
+rosewater = "#f5e0dc"
+flamingo = "#f2cdcd"
+pink = "#f5c2e7"
+mauve = "#cba6f7"
+red = "#f38ba8"
+maroon = "#eba0ac"
+peach = "#fab387"
+yellow = "#f9e2af"
+green = "#a6e3a1"
+teal = "#94e2d5"
+sky = "#89dceb"
+sapphire = "#74c7ec"
+blue = "#89b4fa"
+lavender = "#b4befe"
+text = "#cdd6f4"
+subtext1 = "#bac2de"
+subtext0 = "#a6adc8"
+overlay2 = "#9399b2"
+overlay1 = "#7f849c"
+overlay0 = "#6c7086"
+surface2 = "#585b70"
+surface1 = "#45475a"
+surface0 = "#313244"
+base = "#1e1e2e"
+mantle = "#181825"
+crust = "#11111b"
+
+###
+
+### Languages ###
+[bun]
+format = '\[[$symbol($version)]($style)\]'
+
+[c]
+symbol = " "
+format = '\[[$symbol($version(-$name))]($style)\]'
+
+[cmake]
+format = '\[[$symbol($version)]($style)\]'
+
+[cpp]
+symbol = ' '
+format = '\[[$symbol($version(-$name))]($style)\]'
+
+[deno]
+format = '\[[$symbol($version)]($style)\]'
+
+[docker_context]
+format = '\[[$symbol$context]($style)\]'
+
+[dotnet]
+symbol = '󰪮 '
+format = '\[[$symbol($version)(🎯 $tfm)]($style)\]'
+
+[golang]
+symbol = " "
+format = '\[[$symbol($version)]($style)\]'
+
+[java]
+symbol = " "
+format = '\[[$symbol($version)]($style)\]'
+
+[lua]
+symbol = '󰢱 '
+format = '\[[$symbol($version)]($style)\]'
+
+[nodejs]
+symbol = " "
+format = '\[[$symbol($version)]($style)\]'
+
+[python]
+symbol = " "
+format = '\[[${symbol}${pyenv_prefix}(${version})(\($virtualenv\))]($style)\]'
+
+[rust]
+symbol = " "
+format = '\[[$symbol($version)]($style)\]'
+
+###
+
