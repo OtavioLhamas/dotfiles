@@ -1,7 +1,7 @@
 {{ $categories := promptMultichoiceOnce
     . "categories"
     "Machine categories(s)"
-    (list "work" "personal" "gaming" "multimedia" "development") 
+    (list "work" "personal" "gaming" "multimedia" "development")
 -}}
 {{- $formFactor := promptChoiceOnce
     . "form_factor" "Form factor"

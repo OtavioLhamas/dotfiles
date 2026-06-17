@@ -2,33 +2,35 @@
 # Uses template conditionals based on machine classification
 # Requires Bitwarden-stored GitHub PAT for private repos
 
-{{ $githubPat := "" }}
-{{- if eq .chezmoi.os "linux" -}}
-{{-   if stat (joinPath .chezmoi.homeDir ".bw-session") -}}
-{{-     $githubPat = output "bw" "get" "password" "github-pat" | trim -}}
-{{-   end -}}
-{{- end -}}
+{{- $githubPat := (bitwarden "item" "github-pat").notes -}}
 
-# Example: SSH dotfiles repo (only on work machines)
+.config/nvim:
+    type: git-repo
+    url: https://{{ $githubPat }}@github.com/OtavioLhamas/init.lua
+    refreshPeriod: 168h
+
+.config/bat:
+    type: git-repo
+    url: https://{{ $githubPat }}@github.com/OtavioLhamas/bat
+    refreshPeriod: 168h
+
+{{ if eq .chezmoi.os "linux" }}
+.config/fish:
+    type: git-repo
+    url: https://{{ $githubPat }}@github.com/OtavioLhamas/fish
+    refreshPeriod: 168h
+
+.config/btop:
+    type: git-repo
+    url: https://{{ $githubPat }}@github.com/OtavioLhamas/btop
+    refreshPeriod: 168h
+{{ end }}
+
 {{ if has "work" .categories }}
-[".config/ssh-work"]
-    type = "git-repo"
-    url = "https://{{ $githubPat }}@github.com/youruser/dotfiles-ssh-work.git"
-    refreshPeriod = "168h"
 {{ end }}
 
-# Example: Gaming dotfiles repo
 {{ if has "gaming" .categories }}
-[".config/gaming-dots"]
-    type = "git-repo"
-    url = "https://{{ $githubPat }}@github.com/youruser/dotfiles-gaming.git"
-    refreshPeriod = "168h"
 {{ end }}
 
-# Example: Development dotfiles repo
 {{ if has "development" .categories }}
-[".config/dev-dots"]
-    type = "git-repo"
-    url = "https://{{ $githubPat }}@github.com/youruser/dotfiles-dev.git"
-    refreshPeriod = "168h"
 {{ end }}
