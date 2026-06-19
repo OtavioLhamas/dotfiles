@@ -19,6 +19,14 @@ wanted_packages=(
     make
 )
 
+if [ $DISTRO = "pop" ]; then
+    wanted_packages+=(build-essential)
+    wanted_packages+=(libreadline-dev)
+elif [ $DISTRO = "fedora" ]; then
+    wanted_packages+=(readline-devel)
+fi
+
+
 missing_packages=()
 for package in "${wanted_packages[@]}"; do
     if ! command -v "${package}" &>/dev/null; then
@@ -79,7 +87,7 @@ fi
 if command -v bw &>/dev/null; then
     BW_STATUS=$(bw status 2>/dev/null | yq '.status // "unauthenticated"')
 
-    # if [ "$BW_STATUS" = "unauthenticated" ]; then
-    #     bw login
-    # fi
+    if [ "$BW_STATUS" = "unauthenticated" ]; then
+        bw login
+    fi
 fi
