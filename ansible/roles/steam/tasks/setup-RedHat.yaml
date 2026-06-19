@@ -1,0 +1,6 @@
+---
+- name: Install Steam via flatpak
+  community.general.flatpak:
+    name: com.valvesoftware.Steam
+    state: present
+    method: user
