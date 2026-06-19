@@ -4,3 +4,8 @@ flatpak_remotes:
     flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
     method: system
     state: present
+
+  - name: flathub
+    flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
+    method: user
+    state: present
