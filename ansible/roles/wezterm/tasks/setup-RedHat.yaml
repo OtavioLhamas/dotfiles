@@ -1,0 +1,7 @@
+---
+- name: Install wezterm
+  ansible.builtin.dnf:
+    name: "{{ wezterm_rpm_url }}"
+    state: present
+    disable_gpg_check: true
+  become: true

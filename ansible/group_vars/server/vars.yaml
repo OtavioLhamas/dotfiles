@@ -6,3 +6,6 @@ excluded_roles:
   - stremio
   - obsidian
   - qbittorrent
+  - wezterm
+  - steam
+  - kitty

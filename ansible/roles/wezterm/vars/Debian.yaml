@@ -1,0 +1,4 @@
+---
+wezterm_apt_repo_url: https://apt.fury.io/wez/
+wezterm_apt_key_url: https://apt.fury.io/wez/gpg.key
+wezterm_package: wezterm

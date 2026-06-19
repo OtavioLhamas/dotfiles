@@ -1,0 +1,18 @@
+---
+- name: Add wezterm repository with key
+  ansible.builtin.deb822_repository:
+    name: wezterm-fury
+    types: deb
+    uris: "{{ wezterm_apt_repo_url }}"
+    suites: "*"
+    components: "*"
+    signed_by: "{{ wezterm_apt_key_url }}"
+    state: present
+  become: true
+
+- name: Install wezterm
+  ansible.builtin.apt:
+    update_cache: true
+    name: "{{ wezterm_package }}"
+    state: present
+  become: true
