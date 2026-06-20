@@ -8,6 +8,7 @@ linux_roles:
   - rsync
   - obsidian
   - wezterm
+  - vivaldi
 
 become_roles:
   - geerlingguy.docker

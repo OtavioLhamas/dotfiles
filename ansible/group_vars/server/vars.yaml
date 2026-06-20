@@ -9,3 +9,4 @@ excluded_roles:
   - wezterm
   - steam
   - kitty
+  - vivaldi

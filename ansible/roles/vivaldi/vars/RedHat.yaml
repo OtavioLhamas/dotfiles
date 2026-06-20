@@ -1,0 +1,4 @@
+---
+vivaldi_rpm_repo_url: https://repo.vivaldi.com/stable/rpm/$basearch
+vivaldi_rpm_key_url: https://repo.vivaldi.com/stable/linux_signing_key.pub
+vivaldi_package: vivaldi-stable

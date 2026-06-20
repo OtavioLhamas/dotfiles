@@ -1,0 +1,18 @@
+---
+- name: Add Vivaldi repository with key
+  ansible.builtin.deb822_repository:
+    name: vivaldi
+    types: deb
+    uris: "{{ vivaldi_apt_repo_url }}"
+    suites: stable
+    components: main
+    signed_by: "{{ vivaldi_apt_key_url }}"
+    state: present
+  become: true
+
+- name: Install vivaldi-stable
+  ansible.builtin.apt:
+    update_cache: true
+    name: "{{ vivaldi_package }}"
+    state: present
+  become: true

@@ -1,0 +1,16 @@
+---
+- name: Add Vivaldi repository
+  ansible.builtin.yum_repository:
+    name: vivaldi
+    description: Vivaldi
+    baseurl: "{{ vivaldi_rpm_repo_url }}"
+    gpgcheck: true
+    gpgkey: "{{ vivaldi_rpm_key_url }}"
+    enabled: true
+  become: true
+
+- name: Install vivaldi-stable
+  ansible.builtin.dnf:
+    name: "{{ vivaldi_package }}"
+    state: present
+  become: true

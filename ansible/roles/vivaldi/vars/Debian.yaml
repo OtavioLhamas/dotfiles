@@ -1,0 +1,4 @@
+---
+vivaldi_apt_repo_url: https://repo.vivaldi.com/stable/deb/
+vivaldi_apt_key_url: https://repo.vivaldi.com/stable/linux_signing_key.pub
+vivaldi_package: vivaldi-stable
