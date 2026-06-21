@@ -2,30 +2,6 @@
 # Uses template conditionals based on machine classification
 # Requires Bitwarden-stored GitHub PAT for private repos
 
-{{- $githubPat := (bitwarden "item" "github-pat").notes -}}
-
-.config/nvim:
-    type: git-repo
-    url: https://{{ $githubPat }}@github.com/OtavioLhamas/init.lua
-    refreshPeriod: 168h
-
-.config/bat:
-    type: git-repo
-    url: https://{{ $githubPat }}@github.com/OtavioLhamas/bat
-    refreshPeriod: 168h
-
-{{ if eq .chezmoi.os "linux" }}
-.config/fish:
-    type: git-repo
-    url: https://{{ $githubPat }}@github.com/OtavioLhamas/fish
-    refreshPeriod: 168h
-
-.config/btop:
-    type: git-repo
-    url: https://{{ $githubPat }}@github.com/OtavioLhamas/btop
-    refreshPeriod: 168h
-{{ end }}
-
 {{ if has "work" .categories }}
 {{ end }}
 

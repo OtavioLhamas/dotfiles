@@ -1,0 +1,9 @@
+[submodule "chezmoi/dot_config/external_nvim"]
+	path = chezmoi/dot_config/external_nvim
+	url = git@github.com:OtavioLhamas/init.lua.git
+[submodule "chezmoi/dot_config/external_fish"]
+	path = chezmoi/dot_config/external_fish
+	url = git@github.com:OtavioLhamas/fish.git
+[submodule "chezmoi/dot_config/external_zsh"]
+	path = chezmoi/dot_config/external_zsh
+	url = git@github.com:OtavioLhamas/zsh.git
