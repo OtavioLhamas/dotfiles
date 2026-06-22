@@ -1,3 +1,4 @@
 ---
-rsync_ppa: ppa:rsyncproject/rsync
+rsync_apt_repo_url: https://ppa.launchpadcontent.net/rsyncproject/rsync/ubuntu
+rsync_apt_key_url: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x72BBF83452B11E5B5A8F99123CC6C2BBC7F3DB85
 rsync_package: rsync

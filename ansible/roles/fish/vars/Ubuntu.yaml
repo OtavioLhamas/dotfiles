@@ -1,3 +1,4 @@
 ---
-fish_ppa: ppa:fish-shell/release-4
+fish_apt_repo_url: https://ppa.launchpadcontent.net/fish-shell/release-4/ubuntu
+fish_apt_key_url: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x88421E703EDC7AF54967DED473C9FCC9E2BB48DA
 fish_package: fish
