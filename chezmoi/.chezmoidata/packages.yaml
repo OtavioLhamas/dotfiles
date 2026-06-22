@@ -1,66 +1,115 @@
 # Packages managed by chezmoi scripts (not mise or ansible)
 # Priority: mise > winget > ansible > chezmoi scripts
 # Only add packages here if they are NOT available in the above
+#
+# Structure:
+#   .packages.common          — all machines
+#   .packages.linux.common    — all linux distros
+#   .packages.linux.<distro>  — specific distro (pop, ubuntu, debian, fedora)
+#   .packages.windows         — all windows
+#   .packages.categories.<cat>.common / .linux.common / .linux.<distro>
+#   .packages.form_factors.<factor>.common / .linux.common / .linux.<distro>
+#   .packages.desktop_environments.<de>.common / .linux.common / .linux.<distro>
+#
+# Keys can be omitted entirely — the template handles missing/empty safely.
 
 packages:
   common:
   linux:
+    common:
+      - gcc
+    pop:
+      - build-essential
+      - libreadline-dev
+    ubuntu:
     debian:
     fedora:
+      - readline-devel
   windows:
 
-  # Category-specific packages
   categories:
     gaming:
+      common:
       linux:
-        debian:
+        common:
+        pop:
         fedora:
 
     development:
+      common:
       linux:
-        debian:
+        common:
+        pop:
         fedora:
 
     work:
+      common:
       linux:
-        debian:
+        common:
+        pop:
         fedora:
 
     multimedia:
+      common:
       linux:
-        debian:
+        common:
+        pop:
         fedora:
 
-  # Form factor-specific packages
+    personal:
+      common:
+      linux:
+        common:
+        pop:
+        fedora:
+
   form_factors:
     laptop:
+      common:
       linux:
-        debian:
+        common:
+        pop:
         fedora:
 
     desktop:
+      common:
       linux:
-        debian:
+        common:
+        pop:
         fedora:
 
     server:
+      common:
       linux:
-        debian:
+        common:
+        pop:
         fedora:
 
-  # Desktop environment-specific packages
   desktop_environments:
     gnome:
+      common:
       linux:
-        debian:
+        common:
+        pop:
         fedora:
 
     kde:
+      common:
       linux:
-        debian:
+        common:
+        pop:
         fedora:
 
     cosmic:
+      common:
       linux:
-        debian:
+        common:
+        pop:
+        fedora:
+
+    none:
+      common:
+      linux:
+        common:
+        pop:
         fedora:

@@ -15,17 +15,7 @@ wanted_packages=(
     curl
     wget
     git
-    gcc
-    make
 )
-
-if [ $DISTRO = "pop" ]; then
-    wanted_packages+=(build-essential)
-    wanted_packages+=(libreadline-dev)
-elif [ $DISTRO = "fedora" ]; then
-    wanted_packages+=(readline-devel)
-fi
-
 
 missing_packages=()
 for package in "${wanted_packages[@]}"; do

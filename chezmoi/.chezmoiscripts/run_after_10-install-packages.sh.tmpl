@@ -1,0 +1,149 @@
+#!/bin/bash
+# Installs packages from .chezmoidata/packages.yaml via scripts
+# Only for packages not handled by mise or ansible
+
+set -euo pipefail
+
+DISTRO="{{ .chezmoi.osRelease.id }}"
+
+wanted_packages=()
+{{- with .packages }}
+  {{- with .common }}
+    {{- range . }}
+wanted_packages+=("{{ . }}")
+    {{- end }}
+  {{- end }}
+  {{- if eq $.chezmoi.os "linux" }}
+    {{- with .linux }}
+      {{- with .common }}
+        {{- range . }}
+wanted_packages+=("{{ . }}")
+        {{- end }}
+      {{- end }}
+      {{- with (index . $.chezmoi.osRelease.id) }}
+        {{- range . }}
+wanted_packages+=("{{ . }}")
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- with $.categories }}
+    {{- range . }}
+      {{- $cat := . }}
+      {{- with (index $.packages.categories $cat) }}
+        {{- with .common }}
+          {{- range . }}
+wanted_packages+=("{{ . }}")
+          {{- end }}
+        {{- end }}
+        {{- if eq $.chezmoi.os "linux" }}
+          {{- with .linux }}
+            {{- with .common }}
+              {{- range . }}
+wanted_packages+=("{{ . }}")
+              {{- end }}
+            {{- end }}
+            {{- with (index . $.chezmoi.osRelease.id) }}
+              {{- range . }}
+wanted_packages+=("{{ . }}")
+              {{- end }}
+            {{- end }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- with $.form_factor }}
+    {{- $ff := . }}
+    {{- with (index $.packages.form_factors $ff) }}
+      {{- with .common }}
+        {{- range . }}
+wanted_packages+=("{{ . }}")
+        {{- end }}
+      {{- end }}
+      {{- if eq $.chezmoi.os "linux" }}
+        {{- with .linux }}
+          {{- with .common }}
+            {{- range . }}
+wanted_packages+=("{{ . }}")
+            {{- end }}
+          {{- end }}
+          {{- with (index . $.chezmoi.osRelease.id) }}
+            {{- range . }}
+wanted_packages+=("{{ . }}")
+            {{- end }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- with $.desktop_environment }}
+    {{- $de := . }}
+    {{- with (index $.packages.desktop_environments $de) }}
+      {{- with .common }}
+        {{- range . }}
+wanted_packages+=("{{ . }}")
+        {{- end }}
+      {{- end }}
+      {{- if eq $.chezmoi.os "linux" }}
+        {{- with .linux }}
+          {{- with .common }}
+            {{- range . }}
+wanted_packages+=("{{ . }}")
+            {{- end }}
+          {{- end }}
+          {{- with (index . $.chezmoi.osRelease.id) }}
+            {{- range . }}
+wanted_packages+=("{{ . }}")
+            {{- end }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
+if [[ ${#wanted_packages[@]} -eq 0 ]]; then
+    echo "No script-managed packages defined."
+    exit 0
+fi
+
+missing_packages=()
+case "$DISTRO" in
+    pop|ubuntu|debian)
+        for pkg in "${wanted_packages[@]}"; do
+            if ! dpkg -l "$pkg" 2>/dev/null | grep -q ^ii; then
+                missing_packages+=("$pkg")
+            fi
+        done
+        ;;
+    fedora)
+        for pkg in "${wanted_packages[@]}"; do
+            if ! rpm -q "$pkg" &>/dev/null; then
+                missing_packages+=("$pkg")
+            fi
+        done
+        ;;
+    *)
+        echo "Unknown/unsupported distro '$DISTRO'. Cannot check packages."
+        exit 1
+        ;;
+esac
+
+if [[ ${#missing_packages[@]} -eq 0 ]]; then
+    echo "All script-managed packages already installed."
+    exit 0
+fi
+
+case "$DISTRO" in
+    pop|ubuntu|debian)
+        sudo apt-get update -qq
+        install_cmd="sudo DEBIAN_FRONTEND=noninteractive apt-get install -y"
+        ;;
+    fedora)
+        install_cmd="sudo dnf install -y"
+        ;;
+esac
+
+echo "Installing missing packages: ${missing_packages[*]}"
+$install_cmd "${missing_packages[@]}"
