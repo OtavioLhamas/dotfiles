@@ -20,7 +20,7 @@ properties:
         MinVersion: "10.0.22631"
 
   resources:
-    # --- Common Tools ---
+    ### Common Tools ###
     - resource: Microsoft.WinGet.DSC/WinGetPackage
       id: Git
       directives:
@@ -85,30 +85,48 @@ properties:
         id: Wezterm.Wezterm
         source: winget
 
-    # --- System Utilities ---
-    - resource: PSDscResources/WindowsOptionalFeature
-      name: VirtualMachinePlatform
       directives:
-        securityContext: elevated
       settings:
-        Name: VirtualMachinePlatform
-        Ensure: Present
 
-    - resource: PSDscResources/WindowsOptionalFeature
-      name: Microsoft-Windows-Subsystem-Linux
       directives:
-        securityContext: elevated
       settings:
-        Name: Microsoft-Windows-Subsystem-Linux
-        Ensure: Present
 
-    - resource: Microsoft.Windows.Developer/WindowsCapability
-      name: OpenSSH.Server
       directives:
-        securityContext: elevated
       settings:
-        name: OpenSSH.Server~~~~0.0.1.0
-        ensure: Present
+    ###
+
+    ### System Utilities ###
+    # - resource: PSDscResources/WindowsOptionalFeature
+    #   name: VirtualMachinePlatform
+    #   directives:
+    #     securityContext: elevated
+    #   settings:
+    #     Name: VirtualMachinePlatform
+    #     Ensure: Present
+
+    # - resource: PSDscResources/WindowsOptionalFeature
+    #   name: Microsoft-Windows-Subsystem-Linux
+    #   directives:
+    #     securityContext: elevated
+    #   settings:
+    #     Name: Microsoft-Windows-Subsystem-Linux
+    #     Ensure: Present
+
+    # - resource: Microsoft.Windows.Developer/WindowsCapability
+    #   name: OpenSSH.Server
+    #   directives:
+    #     securityContext: elevated
+    #   settings:
+    #     name: OpenSSH.Server~~~~0.0.1.0
+    #     ensure: Present
+
+    # - resource: PSDscResources/WindowsOptionalFeature
+    #   id: EnableHyperVNative
+    #   directives:
+    #     securityContext: elevated
+    #   settings:
+    #     Name: Microsoft-Hyper-V-All
+    #     Ensure: Present
 
 {{- if has "personal" .categories }}
     - resource: Microsoft.WinGet.DSC/WinGetPackage
@@ -145,7 +163,7 @@ properties:
 {{- end }}
 
 {{- if has "development" .categories }}
-    # --- Development Tools ---
+    ### Development Tools ###
     - resource: Microsoft.WinGet.DSC/WinGetPackage
       id: cURL
       directives:
@@ -153,4 +171,5 @@ properties:
       settings:
         id: cURL.cURL
         source: winget
+    ###
 {{- end }}
