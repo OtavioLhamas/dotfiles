@@ -40,6 +40,13 @@
       vars:
         current_group_roles: "{{ all_roles }}"
 
+- hosts: all
+  tasks:
+    - name: Process All specific roles
+      ansible.builtin.include_tasks: tasks/run_group_roles.yaml
+      vars:
+        current_group_roles: "{{ all_roles }}"
+
 - hosts: linux
   tasks:
     - name: Process Linux specific roles

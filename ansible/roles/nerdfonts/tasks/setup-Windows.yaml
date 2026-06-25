@@ -1,0 +1,21 @@
+---
+- name: Check installed nerdfonts
+  ansible.builtin.stat:
+    path: "{{ nerdfonts_install_dir }}\\{{ font }}NerdFont-Regular.ttf"
+  register: nerdfonts_check
+  loop: "{{ nerdfonts_fonts }}"
+  loop_control:
+    loop_var: font
+
+- name: Download and extract missing nerdfonts
+  ansible.builtin.unarchive:
+    src: "https://github.com/ryanoasis/nerd-fonts/releases/download/v{{ nerdfonts_version }}/{{ font.font }}.zip"
+    dest: "{{ nerdfonts_install_dir }}"
+    remote_src: true
+    creates: "{{ nerdfonts_install_dir }}\\{{ font.font }}NerdFont-Regular.ttf"
+  loop: "{{ nerdfonts_check.results }}"
+  loop_control:
+    loop_var: font
+    label: "{{ font.font }}"
+  when: not font.stat.exists or nerdfonts_force_install
+  notify: "update font cache"

@@ -1,0 +1,9 @@
+---
+nerdfonts_version: "3.4.0"
+nerdfonts_install_method: "source"
+nerdfonts_force_install: false
+nerdfonts_install_dir: "/usr/local/share/fonts/nerdfonts"
+nerdfonts_tmp_dir: "/tmp"
+nerdfonts_fonts:
+  - "JetBrainsMono"
+  - "Hack"

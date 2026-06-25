@@ -1,0 +1,6 @@
+---
+- name: "update font cache"
+  ansible.builtin.command: "fc-cache -f {{ nerdfonts_install_dir }}"
+  become: true
+  changed_when: false
+  when: ansible_facts['os_family'] != "Windows"
