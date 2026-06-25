@@ -77,6 +77,13 @@ properties:
         id: Obsidian.Obsidian
         source: winget
 
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Wezterm
+      directives:
+        securityContext: current
+      settings:
+        id: Wezterm.Wezterm
+        source: winget
 
     # --- System Utilities ---
     - resource: PSDscResources/WindowsOptionalFeature
