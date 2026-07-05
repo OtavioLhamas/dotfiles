@@ -85,8 +85,13 @@ properties:
         id: Wezterm.Wezterm
         source: winget
 
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Vivaldi
       directives:
+        securityContext: current
       settings:
+        id: Vivaldi.Vivaldi
+        source: winget
 
       directives:
       settings:
