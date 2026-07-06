@@ -78,12 +78,6 @@ properties:
         source: winget
 
     - resource: Microsoft.WinGet.DSC/WinGetPackage
-      directives:
-        securityContext: current
-      settings:
-        source: winget
-
-    - resource: Microsoft.WinGet.DSC/WinGetPackage
       id: Vivaldi
       directives:
         securityContext: current
@@ -91,8 +85,21 @@ properties:
         id: Vivaldi.Vivaldi
         source: winget
 
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Bitwarden
       directives:
+        securityContext: current
       settings:
+        id: Bitwarden.Bitwarden
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Bitwarden CLI
+      directives:
+        securityContext: current
+      settings:
+        id: Bitwarden.CLI
+        source: winget
 
     - resource: Microsoft.WinGet.DSC/WinGetPackage
       id: Flameshot
