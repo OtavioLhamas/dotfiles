@@ -205,3 +205,23 @@ properties:
         source: winget
     ###
 {{- end }}
+
+{{- if has "gaming" .categories }}
+    ### Gaming Tools ###
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: PrismLauncher
+      directives:
+        securityContext: elevated
+      settings:
+        id: PrismLauncher.PrismLauncher
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Steam
+      directives:
+        securityContext: elevated
+      settings:
+        id: Valve.Steam
+        source: winget
+    ###
+{{- end }}
