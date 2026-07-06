@@ -86,11 +86,9 @@ properties:
         source: winget
 
     - resource: Microsoft.WinGet.DSC/WinGetPackage
-      id: Wezterm
       directives:
         securityContext: current
       settings:
-        id: Wezterm.Wezterm
         source: winget
 
     - resource: Microsoft.WinGet.DSC/WinGetPackage
@@ -183,6 +181,14 @@ properties:
 
 {{- if has "development" .categories }}
     ### Development Tools ###
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Wezterm
+      directives:
+        securityContext: current
+      settings:
+        id: wez.wezterm
+        source: winget
+
     - resource: Microsoft.WinGet.DSC/WinGetPackage
       id: cURL
       directives:
