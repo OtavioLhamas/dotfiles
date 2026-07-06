@@ -30,14 +30,6 @@ properties:
         source: winget
 
     - resource: Microsoft.WinGet.DSC/WinGetPackage
-      id: WindowsTerminal
-      directives:
-        securityContext: elevated
-      settings:
-        id: Microsoft.WindowsTerminal
-        source: winget
-
-    - resource: Microsoft.WinGet.DSC/WinGetPackage
       id: 7zip
       directives:
         securityContext: elevated
@@ -181,6 +173,14 @@ properties:
 
 {{- if has "development" .categories }}
     ### Development Tools ###
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: WindowsTerminal
+      directives:
+        securityContext: elevated
+      settings:
+        id: Microsoft.WindowsTerminal
+        source: winget
+
     - resource: Microsoft.WinGet.DSC/WinGetPackage
       id: Wezterm
       directives:
