@@ -4,9 +4,13 @@ CONTEXT.md
 dot_config/winget.dsc.yaml.tmpl
 */*.ps1
 */*.ps1.tmpl
+Documents/PowerShell/Microsoft.PowerShell_profile.ps1
 {{- end }}
 
-{{- if ne .chezmoi.os "linux" }}
+{{- if eq .chezmoi.os "windows" }}
 .chezmoiscripts/*.sh
 .chezmoiscripts/*.sh.tmpl
+dot_bashrc
+dot_zshenv
+dot_config/external_fish
 {{- end }}
