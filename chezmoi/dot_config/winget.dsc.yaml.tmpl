@@ -104,8 +104,14 @@ properties:
       directives:
       settings:
 
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Flameshot
       directives:
+        securityContext: current
       settings:
+        id: Flameshot.Flameshot
+        source: winget
+
     ###
 
     ### System Utilities ###
