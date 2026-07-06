@@ -6,9 +6,20 @@
 {{- $formFactor := promptChoiceOnce
     . "form_factor" "Form factor"
     (list "desktop" "laptop" "server") -}}
-{{- $de := promptChoiceOnce
-    . "desktop_environment" "Desktop environment"
-    (list "gnome" "cosmic" "none") -}}
+{{- $xdgDesktop := env "XDG_CURRENT_DESKTOP" | lower -}}
+{{- $de := "none" -}}
+{{- if contains "cosmic" $xdgDesktop -}}
+{{-   $de = "cosmic" -}}
+{{- else if contains "gnome" $xdgDesktop -}}
+{{-   $de = "gnome" -}}
+{{- end -}}
+{{- $xdgSession := env "XDG_SESSION_TYPE" | lower -}}
+{{- $ds := "" -}}
+{{- if eq $xdgSession "wayland" -}}
+{{-   $ds = "wayland" -}}
+{{- else if eq $xdgSession "x11" -}}
+{{-   $ds = "x11" -}}
+{{- end -}}
 
 data:
     categories:
@@ -17,6 +28,7 @@ data:
 {{ end }}
     form_factor: {{ $formFactor }}
     desktop_environment: {{ $de }}
+    display_server: {{ $ds }}
 
 hooks:
     read-source-state:
