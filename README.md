@@ -133,7 +133,7 @@ These classifications drive conditional dotfile installation and Ansible role se
 - **requirements.yaml** — Phase 1: native toolchains (compilers, build tools, dev libraries)
 - **mise config.toml** — Phase 2: language runtimes and CLI tools
 - **WinGet DSC** — Phase 2: Windows native packages
-- **packages.yaml** — Phase 3: simple `apt/dnf install` packages from default repos (htop, flameshot, qbittorrent)
+- **packages.yaml** — Phase 3: simple `apt/dnf install` packages from default repos (htop, qbittorrent)
 - **Ansible** — Phase 3: multi-step installations requiring repo setup, GPG keys, flatpaks, or post-install handlers
 
 ## Password Management
@@ -150,27 +150,38 @@ config:
 ---
 flowchart TB
     Start(("Start: Fresh Machine")) --> OS_Check{"Identify Target OS"}
-    OS_Check -- Linux --> Lin_Start["Run: bootstrap.sh"]
-    OS_Check -- Windows 11 --> Win_Start["Run: bootstrap.ps1"]
-    Win_Start & Lin_Start --> Bootstrap["Install chezmoi &\n`chezmoi init --apply`"]
-    Bootstrap --> Pre_State_Hook["Chezmoi Pre-State Hook"]
-    Pre_State_Hook --> BW_Auth["Install & Authenticate Bitwarden CLI\nFetch Git Access Tokens"]
-    BW_Auth --> Ext_Clone["Git Clones Externals & Submodules"]
-    Ext_Clone -- Linux --> Lin_Before["Run: run_before*.sh"]
-    Ext_Clone -- Windows --> Win_Before["Run: run_before*.ps1"]
-    Win_Before & Lin_Before--> Mise_Bin["Install mise"]
-    Mise_Bin --> Mise_Apply["chezmoi apply: Apply State Files"]
-    Mise_Apply -- Linux --> Lin_After["Run: run_after*.sh"]
-    Mise_Apply -- Windows --> Win_After["Run: run_after*.ps1"]
-    Lin_After --> Lin_Provision["Provision Setup: mise install, Execute Ansible Playbooks"]
-    Win_After --> Win_Provision["Provision Setup: mise install, winget configure"]
-    Win_Provision --> WSL_Install["Configure WSL"]
-    WSL_Install --> WSL_User["Inject $USER to /etc/wsl.conf"]
-    WSL_User --> WSL_Boot["WSL Guest: Execute Linux bootstrap.sh"]
+    OS_Check -- Linux --> Lin_Start["Phase 0: bootstrap.sh"]
+    OS_Check -- Windows 11 --> Win_Start["Phase 0: bootstrap.ps1"]
+    Win_Start & Lin_Start --> Bootstrap["Install chezmoi &\nchezmoi init --apply"]
+
+    Bootstrap --> Phase1["Phase 1: hooks.read-source-state.pre"]
+    Phase1 -- Linux --> Lin_Phase1["Install bare essentials\nInstall toolchains (requirements.yaml)"]
+    Phase1 -- Windows 11 --> Win_Phase1["Install bare essentials\nInstall toolchains (winget-toolschains.dsc.yaml)\nImport VS BuildTools config (dot_buildtools.vsconfig)"]
+
+    Win_Phase1 & Lin_Phase1 --> BW_Auth["Authenticate Bitwarden CLI"]
+    BW_Auth --> Ext_Clone["Git clones externals & submodules"]
+    Ext_Clone --> Classification["Machine classification prompts\n(categories, form factor, DE)"]
+
+    Classification --> Phase2a["Phase 2a: run_once_before\nInstall mise"]
+    Phase2a --> Phase2b["Phase 2b: chezmoi apply\nDeploy dotfiles\n(config.toml, winget.dsc.yaml)"]
+
+    Phase2b -- Linux --> Phase2c_Linux["Phase 2c: run_onchange_after\nmise install (change-detected)"]
+    Phase2b -- Windows --> Phase2c_Win["Phase 2c: run_onchange_after\nmise install + winget configure\n(change-detected)"]
+
+    Phase2c_Linux --> Phase3a["Phase 3a: run_onchange_after\nInstall simple packages\n(packages.yaml)"]
+
+    Phase3a -- Linux --> Phase3b["Phase 3b: run_after\nAnsible provision\n(inventory + multi-step roles)"]
+
+    Phase2c_Win --> Phase3c["Phase 3c: run_after\nWSL setup"]
+    Phase3b -- WSL Guest --> SSH_Loopback["Ansible: Target Windows Host\nvia Local Loopback SSH"]
+
+    Phase3c --> WSL_Boot["WSL Guest:\nExecute Linux bootstrap.sh"]
     WSL_Boot --> Lin_Start
-    Lin_Provision -- Standard Linux --> Final(("ENVIRONMENT READY"))
-    Lin_Provision -- WSL Guest --> SSH_Loopback["Ansible Play: Target Windows Host via Local Loopback SSH"]
-    SSH_Loopback --> Final
+
+    Phase3b -- Standard Linux --> Final(("ENVIRONMENT READY"))
+    SSH_Loopback & Phase3c --> Final
+
+
 ```
 
 ## License
