@@ -6,5 +6,3 @@ if (-not (Get-Command mise -ErrorAction SilentlyContinue)) {
     Write-Host 'Installing mise...'
     winget install --id jdx.mise --accept-source-agreements --accept-package-agreements --silent
 }
-
-$env:PATH = "$env:USERPROFILE\.local\bin;$env:PATH"
