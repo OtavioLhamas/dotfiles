@@ -10,3 +10,4 @@ excluded_roles:
   - steam
   - kitty
   - vivaldi
+  - bitwarden

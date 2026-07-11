@@ -9,6 +9,7 @@ linux_roles:
   - obsidian
   - wezterm
   - vivaldi
+  - bitwarden
 
 become_roles:
   - geerlingguy.docker
