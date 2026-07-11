@@ -1,6 +1,5 @@
-# Packages managed by chezmoi scripts (not mise or ansible)
-# Priority: mise > winget > ansible > chezmoi scripts
-# Only add packages here if they are NOT available in the above
+# Simple apt/dnf install packages from default distro repos.
+# For anything requiring repo setup, GPG keys, or multi-step install — use Ansible.
 #
 # Structure:
 #   .packages.common          — all machines
@@ -17,6 +16,8 @@ packages:
   common:
   linux:
     common:
+      - htop
+      - qbittorrent
     pop:
     ubuntu:
     debian:

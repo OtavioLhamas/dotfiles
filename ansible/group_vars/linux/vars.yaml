@@ -4,7 +4,6 @@ linux_roles:
   - flameshot
   - geerlingguy.docker
   - fish
-  - htop
   - kitty
   - rsync
   - obsidian
