@@ -30,6 +30,14 @@ properties:
         source: winget
 
     - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Lua
+      directives:
+        securityContext: elevated
+      settings:
+        id: DEVCOM.Lua
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
       id: 7zip
       directives:
         securityContext: elevated
