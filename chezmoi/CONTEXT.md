@@ -25,13 +25,28 @@ An external git repository imported into the source state via `.chezmoiexternal.
 _Avoid_: Submodule, dependency, plugin
 
 **Hook**:
-A script triggered by a chezmoi lifecycle event. The `read-source-state.pre` hook runs before chezmoi parses templates, so it cannot use template features — it installs raw prerequisites (git, curl, yq, Bitwarden CLI).
+A script triggered by a chezmoi lifecycle event. The `read-source-state.pre` hook runs before chezmoi parses templates, so it cannot use template features — it installs raw prerequisites and Phase 1 native toolchains by reading declarative data files (`requirements.yaml`, `winget-toolchains.dsc.yaml`).
 _Avoid_: Callback, trigger, middleware
 
 **Script**:
-A numbered lifecycle file in `.chezmoiscripts/` executed during `chezmoi apply`. Naming convention encodes ordering and idempotency: `run_once_before_*` (one-time setup), `run_after_*` (every apply). All scripts are Go templates.
+A numbered lifecycle file in `.chezmoiscripts/` executed during `chezmoi apply`. Naming convention encodes ordering, idempotency, and change detection: `run_once_before_*` (one-time setup), `run_onchange_after_*` (re-runs when generated content changes), `run_after_*` (every apply). All scripts are Go templates.
 _Avoid_: Hook, task, step
 
-**Package Priority**:
-The four-tier installation order for tools: (1) mise if in its registry, (2) WinGet DSC on Windows native, (3) Ansible for system packages, (4) chezmoi scripts as fallback. A tool should be placed in the highest tier that supports it.
-_Avoid_: Package order, install priority
+**Phase / Dependency Layer**:
+A provisioning stage where each layer only depends on previous layers. Phase 1 (toolchains) must complete before Phase 2 (runtimes), which must complete before Phase 3 (configuration). This replaces the old tool-centric package priority model.
+_Avoid_: Step, stage (the general term), tier
+
+**Requirements**:
+Phase 1 declarative package declaration (`.chezmoidata/requirements.yaml`). Lists native machine-wide toolchains (compilers, build tools, dev libraries) needed before mise can compile language runtimes. Read by the hook via `yq`.
+_Avoid_: Prerequisites, dependencies, build-deps
+
+**Change Detection**:
+A `run_onchange_after_` script that only re-runs when a tracked file changes, using a SHA256 hash embedded in a comment:
+```
+# file changed: {{ include "path/to/file" | sha256sum }}
+```
+_Avoid_: Watch, trigger, hash check
+
+**scriptEnv**:
+Environment variables declared in `chezmoi.yaml` under `scriptEnv:` and injected into all scripts and hooks at runtime. Used instead of magic strings for shared paths.
+_Avoid_: Script variables, global env

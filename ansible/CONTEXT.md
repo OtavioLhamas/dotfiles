@@ -1,11 +1,13 @@
 # Ansible
 
-System-wide configuration and provisioning. Ansible applies roles to the local machine (and optionally a Windows host over SSH) to install packages, configure services, and set desktop environment preferences.
+System-wide configuration and provisioning. Ansible applies roles to the local machine (and optionally a Windows host over SSH) for multi-step installations requiring repository setup, GPG keys, flatpaks, services, or post-install handlers.
+
+Simple single-package `apt/dnf install` from default repos should go in `.chezmoidata/packages.yaml` instead (Phase 3a) — not an Ansible role.
 
 ## Language
 
 **Role**:
-A single-responsibility unit of system configuration. Each role handles one concern (e.g., `gnome` configures the desktop environment, `windows_appx` removes bloatware).
+A single-responsibility unit of system configuration. Each role handles one concern requiring multi-step setup (e.g., `fish` installs + sets default shell, `flatpak` installs + adds Flathub remote, `gnome` configures desktop extensions).
 _Avoid_: Task, playbook, recipe
 
 **Play**:
@@ -25,7 +27,7 @@ A target machine. Always `localhost` for Linux. Under WSL, a second host `window
 _Avoid_: Node, target, machine
 
 **Group Variables**:
-Variables scoped to a group, defined in `group_vars/<group>/vars.yaml`. Provide package lists and settings consumed by roles.
+Variables scoped to a group, defined in `group_vars/<group>/vars.yaml`. Provide role lists and settings consumed by plays.
 _Avoid_: Group vars (in writing), group config
 
 **Privilege Escalation**:
