@@ -77,3 +77,11 @@
       ansible.builtin.include_tasks: tasks/run_group_roles.yaml
       vars:
         current_group_roles: "{{ gaming_roles }}"
+
+- hosts: gnome
+  tasks:
+    - name: Configure GNOME desktop environment
+      ansible.builtin.include_role:
+        name: gnome
+        apply:
+          become: true

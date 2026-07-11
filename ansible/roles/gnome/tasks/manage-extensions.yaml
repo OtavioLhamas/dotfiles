@@ -1,0 +1,42 @@
+---
+- name: Read enabled GNOME extensions
+  ansible.builtin.command:
+    cmd: gsettings get org.gnome.shell enabled-extensions
+  register: gnome_extensions_current
+  changed_when: false
+  become: true
+  become_user: "{{ ansible_facts['user_id'] }}"
+
+- name: Enable/disable GNOME extensions
+  ansible.builtin.shell:
+    cmd: |
+      python3 << 'PYEOF'
+      import subprocess, ast, json
+
+      result = subprocess.run(
+          ['gsettings', 'get', 'org.gnome.shell', 'enabled-extensions'],
+          capture_output=True, text=True
+      )
+      raw = result.stdout.strip()
+      if raw.startswith('@as '):
+          raw = raw[4:]
+      current = ast.literal_eval(raw)
+
+      enable = json.loads('{{ gnome_extensions_enable | to_json }}')
+      disable = json.loads('{{ gnome_extensions_disable | to_json }}')
+
+      new = [e for e in current if e not in disable]
+      for e in enable:
+          if e not in new:
+              new.append(e)
+
+      if new != current:
+          subprocess.run(
+              ['gsettings', 'set', 'org.gnome.shell', 'enabled-extensions', str(new)]
+          )
+          print('CHANGED')
+      PYEOF
+  register: gnome_extensions_cfg
+  changed_when: "'CHANGED' in gnome_extensions_cfg.stdout"
+  become: true
+  become_user: "{{ ansible_facts['user_id'] }}"

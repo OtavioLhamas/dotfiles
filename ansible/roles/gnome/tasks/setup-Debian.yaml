@@ -1,0 +1,10 @@
+---
+- name: Install GNOME extensions packages (Debian)
+  ansible.builtin.apt:
+    name: "{{ gnome_extensions_packages }}"
+    state: present
+    update_cache: true
+  become: true
+
+- name: Include GNOME extension enable/disable tasks
+  ansible.builtin.include_tasks: manage-extensions.yaml

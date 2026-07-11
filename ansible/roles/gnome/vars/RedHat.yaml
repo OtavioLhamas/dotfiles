@@ -1,0 +1,11 @@
+---
+gnome_extensions_packages:
+  - gnome-extensions-app
+  - gnome-shell-extension-appindicator
+
+gnome_extensions_enable:
+  - appindicatorsupport@rgcjonas.gmail.com
+
+gnome_extensions_disable:
+  - apps-menu@gnome-shell-extensions.gnome.org
+  - places-menu@gnome-shell-extensions.gnome.org

@@ -1,0 +1,11 @@
+---
+gnome_extensions_packages:
+  - gnome-shell-extension-manager
+  - gnome-shell-extension-appindicator
+
+gnome_extensions_enable:
+  - ubuntu-appindicators@ubuntu.com
+
+gnome_extensions_disable:
+  - apps-menu@gnome-shell-extensions.gnome.org
+  - places-menu@gnome-shell-extensions.gnome.org

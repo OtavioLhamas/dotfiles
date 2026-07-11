@@ -1,0 +1,9 @@
+---
+- name: Install GNOME extensions packages (RedHat)
+  ansible.builtin.dnf:
+    name: "{{ gnome_extensions_packages }}"
+    state: present
+  become: true
+
+- name: Include GNOME extension enable/disable tasks
+  ansible.builtin.include_tasks: manage-extensions.yaml
