@@ -4,10 +4,18 @@
 
 set -euo pipefail
 
-echo "$CHEZMOI_SOURCE_DIR"
 # Determine source directory for reading declarative files
 SOURCE_DIR="${CHEZMOI_SOURCE_DIR:-$(cd -P "$(dirname "$0")/.." && pwd -P)}"
 REQUIREMENTS_FILE="$SOURCE_DIR/.chezmoidata/requirements.yaml"
+
+# --- Install yq if missing ---
+# yq is needed to parse requirements.yaml below, so install it first.
+# The Debian/Ubuntu apt version is outdated, so we always pull from GitHub.
+if ! command -v yq &>/dev/null; then
+    echo "Installing yq binary..."
+    sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+    sudo chmod +x /usr/local/bin/yq
+fi
 
 # --- Detect OS ---
 DISTRO=""
@@ -57,14 +65,6 @@ if [ -f "$REQUIREMENTS_FILE" ]; then
         echo "Installing toolchain packages: ${toolchain_missing[*]}"
         $install_cmd "${toolchain_missing[@]}"
     fi
-fi
-
-# --- Install yq if missing ---
-# Debian registry version is outdated
-if ! command -v yq &>/dev/null; then
-    echo "Installing yq binary..."
-    sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
-    sudo chmod +x /usr/local/bin/yq
 fi
 
 # --- Install Bitwarden CLI if missing ---
