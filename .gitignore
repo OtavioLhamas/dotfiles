@@ -1,1 +1,25 @@
 ansible/roles/geerlingguy.docker
+
+# chezmoi age identity file
+key.txt
+
+# chezmoi age encrypted files (safety net)
+*.age
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Ansible vault
+vault-password*
+*.vault
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor temp files
+*.swp
+*.swo
+*~
