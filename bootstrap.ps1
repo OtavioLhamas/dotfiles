@@ -6,12 +6,13 @@ param()
 
 $ErrorActionPreference = "Stop"
 
+$bin_dir = "$HOME/.local/bin"
+$chezmoi_path = "$bin_dir/chezmoi"
+
 # Install chezmoi
-if (-not ($chezmoi_cmd = Get-Command chezmoi -ErrorAction SilentlyContinue)) {
-    $bin_dir = "$HOME/.local/bin"
+if (-not ($chezmoi_cmd = Get-Command $chezmoi_path -ErrorAction SilentlyContinue)) {
     if (-not (Test-Path $bin_dir)) { New-Item -ItemType Directory -Path $bin_dir -Force }
 
-    $chezmoi_path = "$bin_dir/chezmoi"
     Write-Host "Installing chezmoi..."
     iex "&{$(irm 'https://get.chezmoi.io/ps1')} -b '$bin_dir'"
     $chezmoi_cmd = $chezmoi_path
