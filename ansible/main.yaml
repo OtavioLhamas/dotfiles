@@ -37,12 +37,6 @@
         key: "{{ ansible_facts['system'] | lower }}"
       changed_when: false
 
-  tasks:
-    - name: Process global roles
-      ansible.builtin.include_tasks: tasks/run_group_roles.yaml
-      vars:
-        current_group_roles: "{{ all_roles }}"
-
 - hosts: all
   tasks:
     - name: Process All specific roles
