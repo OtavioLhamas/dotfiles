@@ -4,3 +4,16 @@
   become: true
   changed_when: false
   when: ansible_facts['os_family'] != "Windows"
+
+- name: "update font cache"
+  ansible.windows.win_service:
+    name: FontCache
+    state: stopped
+    force_dependent_services: true
+  when: ansible_facts['os_family'] == "Windows"
+
+- name: "update font cache"
+  ansible.windows.win_service:
+    name: FontCache
+    state: started
+  when: ansible_facts['os_family'] == "Windows"

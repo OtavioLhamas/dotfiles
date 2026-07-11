@@ -1,21 +1,109 @@
 ---
 - name: Check installed nerdfonts
-  ansible.builtin.stat:
-    path: "{{ nerdfonts_install_dir }}\\{{ font }}NerdFont-Regular.ttf"
+  ansible.windows.win_stat:
+    path: "{{ nerdfonts_install_dir }}\\{{ font_name }}NerdFont-Regular.ttf"
   register: nerdfonts_check
   loop: "{{ nerdfonts_fonts }}"
   loop_control:
-    loop_var: font
+    loop_var: font_name
 
-- name: Download and extract missing nerdfonts
-  ansible.builtin.unarchive:
-    src: "https://github.com/ryanoasis/nerd-fonts/releases/download/v{{ nerdfonts_version }}/{{ font.font }}.zip"
-    dest: "{{ nerdfonts_install_dir }}"
-    remote_src: true
-    creates: "{{ nerdfonts_install_dir }}\\{{ font.font }}NerdFont-Regular.ttf"
+- name: Download missing nerdfonts
+  ansible.windows.win_get_url:
+    url: "https://github.com/ryanoasis/nerd-fonts/releases/download/v{{ nerdfonts_version }}/{{ font_stat.font_name }}.zip"
+    dest: "{{ nerdfonts_tmp_dir }}\\{{ font_stat.font_name }}.zip"
   loop: "{{ nerdfonts_check.results }}"
   loop_control:
-    loop_var: font
-    label: "{{ font.font }}"
-  when: not font.stat.exists or nerdfonts_force_install
+    loop_var: font_stat
+    label: "{{ font_stat.font_name }}"
+  when: not font_stat.stat.exists or nerdfonts_force_install
+
+- name: Extract missing nerdfonts
+  community.windows.win_unzip:
+    src: "{{ nerdfonts_tmp_dir }}\\{{ font_stat.font_name }}.zip"
+    dest: "{{ nerdfonts_tmp_dir }}\\{{ font_stat.font_name }}"
+    delete_archive: true
+  loop: "{{ nerdfonts_check.results }}"
+  loop_control:
+    loop_var: font_stat
+    label: "{{ font_stat.font_name }}"
+  when: not font_stat.stat.exists or nerdfonts_force_install
+
+- name: Find extracted font files
+  ansible.windows.win_find:
+    paths: "{{ nerdfonts_tmp_dir }}"
+    patterns: ['*.ttf', '*.otf']
+    recurse: true
+  register: found_fonts
+
+- name: Copy font files to Fonts directory
+  ansible.windows.win_copy:
+    src: "{{ font_file.path }}"
+    dest: "{{ nerdfonts_install_dir }}\\{{ font_file.filename }}"
+    remote_src: true
+  loop: "{{ found_fonts.files }}"
+  loop_control:
+    loop_var: font_file
+    label: "{{ font_file.filename }}"
+
+- name: Extract font names from files
+  ansible.windows.win_powershell:
+    parameters:
+      FontPaths: "{{ found_fonts.files | map(attribute='path') | list }}"
+      FontFilenames: "{{ found_fonts.files | map(attribute='filename') | list }}"
+    error_action: "stop"
+    script: |
+      param(
+        [string[]]$FontPaths,
+        [string[]]$FontFilenames
+      )
+
+      Add-Type -AssemblyName System.Drawing -ErrorAction SilentlyContinue
+      $results = @()
+      for ($i = 0; $i -lt $FontPaths.Count; $i++) {
+        $path = $FontPaths[$i]
+        $filename = $FontFilenames[$i]
+        try {
+          $fc = New-Object System.Drawing.Text.PrivateFontCollection
+          $fc.AddFontFile($path)
+          $fontName = $fc.Families[0].Name
+          $fc.Dispose()
+        } catch {
+          $fontName = [System.IO.Path]::GetFileNameWithoutExtension($filename)
+        }
+        $ext = [System.IO.Path]::GetExtension($filename).ToLower()
+        $type = if ($ext -eq '.otf') { 'OpenType' } else { 'TrueType' }
+        $results += @{
+          reg_name = "$fontName ($type)"
+          filename = $filename
+        }
+      }
+      $Ansible.Result = $results
+  register: font_registry_entries
+  when: found_fonts.files | length > 0
+
+- name: Register fonts in registry
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts
+    name: "{{ reg_entry.reg_name }}"
+    data: "{{ reg_entry.filename }}"
+    type: string
+    state: present
+  loop: "{{ font_registry_entries.result }}"
+  loop_control:
+    loop_var: reg_entry
+    label: "{{ reg_entry.filename }}"
   notify: "update font cache"
+  when: found_fonts.files | length > 0
+  become: true
+  become_method: runas
+  become_user: otavio
+
+- name: Cleanup extracted font directories
+  ansible.windows.win_file:
+    path: "{{ nerdfonts_tmp_dir }}\\{{ font_stat.font_name }}"
+    state: absent
+  loop: "{{ nerdfonts_check.results }}"
+  loop_control:
+    loop_var: font_stat
+    label: "{{ font_stat.font_name }}"
+  when: not font_stat.stat.exists or nerdfonts_force_install
