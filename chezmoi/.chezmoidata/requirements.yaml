@@ -4,6 +4,9 @@
 linux:
   common:
     - gcc
+    - curl
+    - wget
+    - git
   pop:
     - build-essential
     - libreadline-dev
