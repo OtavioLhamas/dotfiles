@@ -17,18 +17,10 @@ packages:
   common:
   linux:
     common:
-      - gcc
     pop:
-      - build-essential
-      - libreadline-dev
     ubuntu:
-      - build-essential
-      - libreadline-dev
     debian:
-      - build-essential
-      - libreadline-dev
     fedora:
-      - readline-devel
   windows:
 
   categories:

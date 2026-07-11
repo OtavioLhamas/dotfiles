@@ -21,6 +21,10 @@
 {{-   $ds = "x11" -}}
 {{- end -}}
 
+scriptEnv:
+    ANSIBLE_DIR: "{{ .chezmoi.workingTree }}/ansible"
+    MISE_BIN: "{{ .chezmoi.homeDir }}/.local/bin/mise"
+
 data:
     categories:
 {{ range $categories }}
@@ -48,3 +52,4 @@ interpreters:
         command: "pwsh"
         args: ["-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File"]
 
+color: true

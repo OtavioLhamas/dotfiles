@@ -1,47 +1,62 @@
 #!/bin/bash
-# Runs during hooks.read-source-state.pre
 # Installs prerequisites needed before chezmoi can fully operate
+# Runs during hooks.read-source-state.pre (NOT a template)
 
 set -euo pipefail
 
-# Detect OS
+echo "$CHEZMOI_SOURCE_DIR"
+# Determine source directory for reading declarative files
+SOURCE_DIR="${CHEZMOI_SOURCE_DIR:-$(cd -P "$(dirname "$0")/.." && pwd -P)}"
+REQUIREMENTS_FILE="$SOURCE_DIR/.chezmoidata/requirements.yaml"
+
+# --- Detect OS ---
 DISTRO=""
 if [ -f /etc/os-release ]; then
     . /etc/os-release
     DISTRO="$ID"
 fi
 
-wanted_packages=(
-    curl
-    wget
-    git
-)
+if [ -f "$REQUIREMENTS_FILE" ]; then
+    # Read common packages for all Linux distros
+    common_packages=$(yq '.linux.common[]' "$REQUIREMENTS_FILE" 2>/dev/null)
 
-missing_packages=()
-for package in "${wanted_packages[@]}"; do
-    if ! command -v "${package}" &>/dev/null; then
-        missing_packages+=("${package}")
+    # Read distro-specific packages
+    distro_packages=$(yq ".linux.${DISTRO}[]" "$REQUIREMENTS_FILE" 2>/dev/null)
+
+    toolchain_packages=()
+    if [ -n "$common_packages" ] && [ "$common_packages" != "null" ]; then
+        while IFS= read -r pkg; do
+            [ -n "$pkg" ] && toolchain_packages+=("$pkg")
+        done <<< "$common_packages"
     fi
-done
+    if [ -n "$distro_packages" ] && [ "$distro_packages" != "null" ]; then
+        while IFS= read -r pkg; do
+            [ -n "$pkg" ] && toolchain_packages+=("$pkg")
+        done <<< "$distro_packages"
+    fi
 
-# --- Install missing packages if any ---
-if [ ! ${#missing_packages[@]} -eq 0 ]; then
-    install_cmd=""
-    case "$DISTRO" in
-    ubuntu | debian | pop)
-        sudo apt-get update -qq
-        install_cmd="sudo DEBIAN_FRONTEND=noninteractive apt-get install -y"
-        ;;
-    fedora)
-        install_cmd="sudo dnf install -y"
-        ;;
-    *)
-        echo "Unknown/unsupported distro '$DISTRO'. Cannot install missing packages automatically."
-        ;;
-    esac
+    toolchain_missing=()
+    for package in "${toolchain_packages[@]}"; do
+        if ! dpkg -l "$package" 2>/dev/null | grep -q '^ii' && ! rpm -q "$package" &>/dev/null 2>&1; then
+            toolchain_missing+=("${package}")
+        fi
+    done
 
-    echo "Installing missing packages: ${missing_packages[*]}"
-    $install_cmd "${missing_packages[@]}"
+    # --- Install missing packages if any ---
+    if [ ${#toolchain_missing[@]} -gt 0 ]; then
+        case "$DISTRO" in
+        ubuntu | debian | pop)
+            sudo apt-get update -qq
+            install_cmd="sudo DEBIAN_FRONTEND=noninteractive apt-get install -y"
+            ;;
+        fedora)
+            install_cmd="sudo dnf install -y"
+            ;;
+        esac
+
+        echo "Installing toolchain packages: ${toolchain_missing[*]}"
+        $install_cmd "${toolchain_missing[@]}"
+    fi
 fi
 
 # --- Install yq if missing ---

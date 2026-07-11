@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=https://aka.ms/configuration-dsc-schema/0.2
+# Read by .ensure-pre-requisites.ps1 hook via winget configure.
+# These must be present before mise compiles language runtimes and native tools.
+
+properties:
+  configurationVersion: 0.2.0
+
+  metadata:
+    winget:
+      processor: dscv3
+
+  resources:
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: curl
+      directives:
+        securityContext: elevated
+      settings:
+        id: cURL.cURL
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: git
+      directives:
+        securityContext: elevated
+      settings:
+        id: Git.Git
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: vsBuildTools
+      directives:
+        securityContext: elevated
+      settings:
+        id: Microsoft.VisualStudio.BuildTools
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: PowerShell
+      directives:
+        securityContext: elevated
+      settings:
+        id: Microsoft.PowerShell
+        source: winget
+

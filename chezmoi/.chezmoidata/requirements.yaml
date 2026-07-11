@@ -1,0 +1,17 @@
+# Phase 1 — machine-wide native toolchains and dev libraries
+# Read by .ensure-pre-requisites.sh hook via yq.
+# These must be present before mise compiles language runtimes and native tools.
+linux:
+  common:
+    - gcc
+  pop:
+    - build-essential
+    - libreadline-dev
+  ubuntu:
+    - build-essential
+    - libreadline-dev
+  debian:
+    - build-essential
+    - libreadline-dev
+  fedora:
+    - readline-devel
