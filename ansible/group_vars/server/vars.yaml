@@ -1,6 +1,7 @@
 ---
 excluded_roles:
   - discord
+  - flameshot
   - flatpak
   - spotify
   - stremio

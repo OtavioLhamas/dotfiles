@@ -1,0 +1,5 @@
+---
+- name: Grant flameshot Wayland screenshot permission
+  ansible.builtin.command:
+    cmd: flatpak permission-set screenshot screenshot org.flameshot.Flameshot yes
+  changed_when: false

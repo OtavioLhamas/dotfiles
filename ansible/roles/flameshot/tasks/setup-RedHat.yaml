@@ -1,0 +1,14 @@
+---
+- name: Install flameshot
+  ansible.builtin.dnf:
+    name: flameshot
+    state: present
+  become: true
+
+- name: Grant Wayland screenshot permission
+  ansible.builtin.include_tasks: setup-wayland-permission.yaml
+  when:
+    - ansible_facts['env']['XDG_CURRENT_DESKTOP'] is defined
+    - ansible_facts['env']['XDG_SESSION_TYPE'] is defined
+    - "'gnome' in ansible_facts['env']['XDG_CURRENT_DESKTOP'] | lower"
+    - ansible_facts['env']['XDG_SESSION_TYPE'] | lower == 'wayland'

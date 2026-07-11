@@ -1,6 +1,7 @@
 ---
 linux_roles:
   - flatpak
+  - flameshot
   - geerlingguy.docker
   - fish
   - htop
