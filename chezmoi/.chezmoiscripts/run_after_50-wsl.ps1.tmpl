@@ -1,0 +1,55 @@
+$ErrorActionPreference = "Stop"
+
+$Distro = "Ubuntu"
+$User = $env:UserName
+
+if (!(Get-Command "wsl" -ErrorAction SilentlyContinue)) {
+    Write-Error "WSL command not found. Ensure your DSC run completed successfully or reboot."
+    exit 1
+}
+
+$WslList = wsl --list --quiet
+if ($WslList -notcontains $Distro) {
+    Write-Host "Installing fresh $Distro instance..." -ForegroundColor Yellow
+    # wsl --install -d $Distro --no-launch
+
+    # Give the subsystem a moment to initialize the storage layer
+    Start-Sleep -Seconds 5
+}
+
+Write-Host "Provisioning user '$User' inside guest..." -ForegroundColor Yellow
+wsl -d $Distro -u root bash -c "
+    if ! id -u $User >/dev/null 2>&1; then
+        useradd -m -s /bin/bash -G sudo $User
+    else
+        echo 'User account already exists.'
+    fi
+"
+
+# 4. Inject the wsl.conf configuration file to set the default engine states
+Write-Host "-> Writing /etc/wsl.conf configuration states..." -ForegroundColor Yellow
+$WslConfContent = @"
+[boot]
+systemd=true
+
+[user]
+default=$User
+
+[automount]
+options = "metadata,uid=1000,gid=1000,umask=22,fmask=11"
+"@
+
+# Pass the raw string block over the stdin pipeline directly into a root file inside the guest
+$WslConfContent | wsl -d $Distro -u root bash -c "cat > /etc/wsl.conf"
+
+# 5. Cycle the VM instance to forcefully apply the new wsl.conf settings
+Write-Host "-> Terminating WSL to reload configuration states..." -ForegroundColor Yellow
+wsl --terminate $Distro
+Start-Sleep -Seconds 3
+
+# 6. KICK OFF THE RECURSIVE LOOP 
+# The VM boots up natively as 'otavio', pulls your bootstrap.sh script over curl, and hands execution off
+Write-Host "-> Triggering downstream Linux Bootstrap inside Guest VM..." -ForegroundColor Green
+wsl -d $Distro -u $User bash -c "curl -fsSL https://raw.githubusercontent.com/yourusername/dotfiles/main/bootstrap.sh | bash"
+
+Write-Host "====== WSL Provisioning Completed Succesfully ======" -ForegroundColor Cyan
