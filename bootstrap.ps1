@@ -21,6 +21,11 @@ if (-not ($chezmoi_cmd = Get-Command $chezmoi_path -ErrorAction SilentlyContinue
     $chezmoi_cmd = $chezmoi_cmd.Source
 }
 
+if (-not (Get-Command pwsh -ErrorAction SilentlyContinue)) {
+    Write-Host "Installing pwsh..."
+    winget install --id Microsoft.PowerShell --accept-source-agreements --accept-package-agreements --silent
+}
+
 # Get the script directory
 $script_dir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $source_path = Join-Path $script_dir "chezmoi"
