@@ -3,7 +3,7 @@
 > [!WARNING]
 > This is a work in progress, current commit might be in a broken state
 
-A dotfiles and system configuration management project using **chezmoi**, **mise**, and **Ansible**, with the goal to create an idempotent, declarative setup that allows for easy reproduction.
+A dotfiles and system configuration management project using **chezmoi**, **mise**, and **Ansible**, with the goal to create an idempotent, declarative setup that allows easy reproduction.
 
 ## Quick Start
 
@@ -22,22 +22,43 @@ curl https://github.com/OtavioLhamas/dotfiles.git/bootstrap.sh | sh
 
 ### Windows 11 Native
 
-Make sure you have the necessary execution policy:
+Some initial setup might be needed:
+
+```powershell
+# Allows the use of WinGet DSC
+winget configure --enable
+
+# Setup SSH so Ansible can reach the Windows host
+Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
+Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+
+# Start the sshd service
+Start-Service sshd
+
+# OPTIONAL but recommended:
+Set-Service -Name sshd -StartupType 'Automatic'
+
+# Confirm the Firewall rule is configured. It should be created automatically by setup. Run the following to verify
+if (!(Get-NetFirewallRule -Name "OpenSSH-Server-In-TCP" -ErrorAction SilentlyContinue)) {
+    Write-Output "Firewall Rule 'OpenSSH-Server-In-TCP' does not exist, creating it..."
+    New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22
+} else {
+    Write-Output "Firewall rule 'OpenSSH-Server-In-TCP' has been created and exists."
+}
+
+```
 
 ```powershell
 # Requires elevated privileges
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
 ```
 
-Enable winget configure:
+Then, finally:
 
 ```powershell
-winget configure --enable
-```
-
-```powershell
+# Run on a regular, non-elevated shell
 git clone https://github.com/OtavioLhamas/dotfiles.git ~/.local/share/chezmoi/
-~/.local/share/chezmoi/bootstrap.ps1
+~\.local\share\chezmoi\bootstrap.ps1
 ```
 
 or
@@ -61,14 +82,24 @@ These are the specific versions I validated:
 - WSL (Windows Subsystem for Linux)
 
 - Desktop Environments: GNOME, COSMIC
+- Display Server: Wayland, X11
 
 ## Architecture
 
+Provisioning is organized around **dependency layers** (phases), not around tools. Each phase only depends on previous phases.
+
+| Phase | Layer | Mechanism |
+|-------|-------|-----------|
+| **0** | Bootstrap | `bootstrap.sh` / `bootstrap.ps1` — installs chezmoi only |
+| **1** | Native toolchains | `hooks.read-source-state.pre` — compilers, build tools, dev libraries (read from declarative files) |
+| **2** | Language runtimes & package managers | `run_once_before_` installs mise; dotfiles deployed; `run_onchange_after_` runs `mise install` / `winget configure` with change detection |
+| **3** | System configuration | `run_onchange_after_` for simple packages; `run_after_` for Ansible (multi-step/repo-dependent roles) and WSL setup |
+
 | Tool | Purpose |
-| ------ | --------- |
-| **chezmoi** | Dotfiles management, machine classification prompts, bootstrap orchestration |
+|------|---------|
+| **chezmoi** | Dotfiles management, machine classification prompts, phase orchestration |
 | **mise** | User-space development tool installation (languages, CLI tools) |
-| **Ansible** | System-wide configuration, services, desktop environment settings |
+| **Ansible** | System-wide configuration requiring multi-step setup (repos, GPG keys, flatpaks, services) |
 | **WinGet DSC** | Windows native declarative package/configuration management |
 
 ## Testing
@@ -97,12 +128,13 @@ During `chezmoi apply`, you'll be prompted for:
 
 These classifications drive conditional dotfile installation and Ansible role selection.
 
-## Package Installation Priority
+## Package Installation Strategy
 
-1. **mise** — if available in registry (user-space tools)
-2. **WinGet DSC** — on Windows native, if available
-3. **Ansible roles** — system packages and configurations
-4. **Chezmoi scripts** — anything not covered above, declared in `.chezmoidata/packages.yaml`
+- **requirements.yaml** — Phase 1: native toolchains (compilers, build tools, dev libraries)
+- **mise config.toml** — Phase 2: language runtimes and CLI tools
+- **WinGet DSC** — Phase 2: Windows native packages
+- **packages.yaml** — Phase 3: simple `apt/dnf install` packages from default repos (htop, flameshot, qbittorrent)
+- **Ansible** — Phase 3: multi-step installations requiring repo setup, GPG keys, flatpaks, or post-install handlers
 
 ## Password Management
 
