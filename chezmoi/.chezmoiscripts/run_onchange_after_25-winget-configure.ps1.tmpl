@@ -1,0 +1,9 @@
+# winget DSC: {{ include "dot_config/winget.dsc.yaml.tmpl" | sha256sum }}
+
+$ErrorActionPreference = 'Stop'
+
+if (Get-Command winget -ErrorAction SilentlyContinue) {
+    Write-Host 'Running WinGet DSC...'
+    winget configure "$env:USERPROFILE\.config\winget.dsc.yaml" --accept-configuration-agreements
+}
+

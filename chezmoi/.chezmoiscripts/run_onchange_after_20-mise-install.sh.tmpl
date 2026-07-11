@@ -1,0 +1,11 @@
+#!/bin/bash
+# mise config: {{ include "dot_config/mise/config.toml.tmpl" | sha256sum }}
+
+set -euo pipefail
+
+export PATH="$HOME/.local/bin:$PATH"
+
+if command -v mise &>/dev/null; then
+    echo "Running mise install..."
+    mise install
+fi

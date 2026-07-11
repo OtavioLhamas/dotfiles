@@ -1,0 +1,12 @@
+# mise config: {{ include "dot_config/mise/config.toml.tmpl" | sha256sum }}
+
+$ErrorActionPreference = 'Stop'
+
+$machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+$userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+$env:Path = "$machinePath;$userPath;$env:USERPROFILE\.local\bin"
+
+if (Get-Command mise -ErrorAction SilentlyContinue) {
+    Write-Host 'Running mise install...'
+    mise install
+}
