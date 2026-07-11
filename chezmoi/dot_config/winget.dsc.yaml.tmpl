@@ -231,5 +231,13 @@ properties:
       settings:
         id: Valve.Steam
         source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: VS Community
+      directives:
+        securityContext: elevated
+      settings:
+        id: Microsoft.VisualStudio.Community
+        source: winget
     ###
 {{- end }}

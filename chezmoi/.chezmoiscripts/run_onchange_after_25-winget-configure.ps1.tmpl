@@ -1,4 +1,5 @@
 # winget DSC: {{ include "dot_config/winget.dsc.yaml.tmpl" | sha256sum }}
+# vsconfig: {{ include "Documents/dot_community.vsconfig" | sha256sum }}
 
 $ErrorActionPreference = 'Stop'
 
@@ -7,3 +8,66 @@ if (Get-Command winget -ErrorAction SilentlyContinue) {
     winget configure "$env:USERPROFILE\.config\winget.dsc.yaml" --accept-configuration-agreements
 }
 
+{{- if and (eq .chezmoi.os "windows") (has "development" .categories) }}
+$SourceDir = if ($env:CHEZMOI_SOURCE_DIR) { $env:CHEZMOI_SOURCE_DIR } else { Split-Path -Parent $PSScriptRoot }
+$VsConfig = Join-Path $SourceDir "Documents/dot_community.vsconfig"
+
+if (Test-Path $VsConfig) {
+    $installerDir = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer"
+
+    $vswhere = Join-Path $installerDir "vswhere.exe"
+    $setupExe = Join-Path $installerDir "setup.exe"
+
+    if (-not (Test-Path $vswhere)) {
+        Write-Host "Could not find vswhere.exe at '$vswhere'."
+    }
+
+    if (-not (Test-Path $setupExe)) {
+        Write-Host "Could not find setup.exe at '$setupExe'."
+    }
+
+    $instance = & $vswhere `
+        -products Microsoft.VisualStudio.Product.Community `
+        -latest `
+        -format json 2>$null | ConvertFrom-Json
+
+    $installationPath = $instance.installationPath
+
+    if (-not $instance -or [string]::IsNullOrWhiteSpace($installationPath)) {
+        Write-Host "Could not locate a Visual Studio Community installation."
+    }
+
+    Write-Host "Configuring Visual Studio Community at '$installationPath'..."
+
+    $arguments = @(
+        'modify'
+        "--installPath `"$installationPath`""
+        "--config `"$VsConfig`""
+        '--passive'
+        '--norestart'
+        '--allowUnsignedExtensions'
+    ) -join ' '
+
+    $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+
+    if ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        $process = Start-Process `
+            -FilePath $setupExe `
+            -ArgumentList $arguments `
+            -Wait `
+            -PassThru
+    }
+    else {
+        $process = Start-Process `
+            -FilePath $setupExe `
+            -ArgumentList $arguments `
+            -Verb RunAs `
+            -Wait `
+            -PassThru
+    }
+
+    if ($process.ExitCode -ne 0) {
+        Write-Host "Visual Studio configuration failed with exit code $($process.ExitCode)."
+    }
+}
+{{ end -}}
