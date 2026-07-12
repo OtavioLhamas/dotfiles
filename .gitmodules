@@ -7,3 +7,6 @@
 [submodule "chezmoi/dot_config/external_zsh"]
 	path = chezmoi/dot_config/external_zsh
 	url = git@github.com:OtavioLhamas/zsh.git
+[submodule "chezmoi/dot_config/external_opencode"]
+	path = chezmoi/dot_config/external_opencode
+	url = git@github.com:OtavioLhamas/opencode.git
