@@ -1,0 +1,8 @@
+---
+- name: Install zsh
+  ansible.builtin.apt:
+    name: "{{ zsh_package }}{% if zsh_version != 'latest' %}={{ zsh_version }}{% endif %}"
+    state: present
+    update_cache: true
+    allow_downgrade: "{{ zsh_version != 'latest' }}"
+  become: true
