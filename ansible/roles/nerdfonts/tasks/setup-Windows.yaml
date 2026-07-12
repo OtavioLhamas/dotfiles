@@ -94,9 +94,6 @@
     label: "{{ reg_entry.filename }}"
   notify: "update font cache"
   when: found_fonts.files | length > 0
-  become: true
-  become_method: runas
-  become_user: otavio
 
 - name: Cleanup extracted font directories
   ansible.windows.win_file:

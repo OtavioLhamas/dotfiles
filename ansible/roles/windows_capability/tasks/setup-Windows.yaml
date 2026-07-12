@@ -32,7 +32,7 @@
   changed_when: capability_removal_results.output[0]
   become: true
   become_method: runas
-  become_user: otavio
+  become_user: "{{ ansible_facts['user_id'] }}"
 
 - name: Windows capabilities removal summary
   ansible.builtin.debug:

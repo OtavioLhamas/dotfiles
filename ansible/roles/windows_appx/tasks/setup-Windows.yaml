@@ -45,7 +45,7 @@
   changed_when: appx_removal_results.output[0]
   become: true
   become_method: runas
-  become_user: otavio
+  become_user: "{{ ansible_facts['user_id'] }}"
 
 - name: AppX bloatware removal summary
   ansible.builtin.debug:

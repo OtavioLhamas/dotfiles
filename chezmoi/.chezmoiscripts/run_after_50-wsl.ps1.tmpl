@@ -48,7 +48,7 @@ wsl --terminate $Distro
 Start-Sleep -Seconds 3
 
 # 6. KICK OFF THE RECURSIVE LOOP 
-# The VM boots up natively as 'otavio', pulls your bootstrap.sh script over curl, and hands execution off
+# The VM boots up natively as the current user, pulls your bootstrap.sh script over curl, and hands execution off
 Write-Host "-> Triggering downstream Linux Bootstrap inside Guest VM..." -ForegroundColor Green
 wsl -d $Distro -u $User bash -c "curl -fsSL https://raw.githubusercontent.com/yourusername/dotfiles/main/bootstrap.sh | bash"
 

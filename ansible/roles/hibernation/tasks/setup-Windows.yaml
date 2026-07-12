@@ -2,7 +2,7 @@
 - name: Configure hibernation settings
   become: true
   become_method: runas
-  become_user: otavio
+  become_user: "{{ ansible_facts['user_id'] }}"
   block:
     - name: Set HibernateEnabled registry key
       ansible.windows.win_regedit:
