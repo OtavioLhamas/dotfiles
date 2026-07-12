@@ -48,12 +48,12 @@ echo "Inventory generated at: $ANSIBLE_DIR/inventory.yaml"
 # On the first bootstrap, mise is not yet activated in this environment
 # so it is safer to just grab the binary than dealing with PATH and all that
 
-ANSIBLE_GALAXY="$(mise which ansible-galaxy)"
+ANSIBLE_GALAXY="$($MISE_BIN which ansible-galaxy)"
 if command -v ${ANSIBLE_GALAXY} &>/dev/null; then
     ${ANSIBLE_GALAXY} install -r ${ANSIBLE_DIR}/requirements.yaml --force
 fi
 
-ANSIBLE_PLAYBOOK="$(mise which ansible-playbook)"
+ANSIBLE_PLAYBOOK="$($MISE_BIN which ansible-playbook)"
 if command -v ${ANSIBLE_PLAYBOOK} &>/dev/null; then
     echo "Running Ansible playbook..."
     ${ANSIBLE_PLAYBOOK} -K -i "$ANSIBLE_DIR/inventory.yaml" "$ANSIBLE_DIR/main.yaml"
