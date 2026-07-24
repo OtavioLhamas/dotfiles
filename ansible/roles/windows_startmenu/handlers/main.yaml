@@ -1,0 +1,9 @@
+---
+- name: Clear start menu cache
+  ansible.windows.win_file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ windows_startmenu_cache_paths }}"
+
+- name: Restart Windows Explorer
+  ansible.windows.win_shell: Stop-Process -Name explorer -Force

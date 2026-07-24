@@ -1,0 +1,22 @@
+---
+- name: Set ConfigureStartPins registry (Start Menu pins)  present
+  ansible.windows.win_regedit:
+    path: HKLM:\Software\Policies\Microsoft\Windows\Explorer
+    name: ConfigureStartPins
+    data: "{{ {'pinnedList': windows_startmenu_pinned_list} | to_json }}"
+    type: string
+    state: present
+  notify:
+    - Clear start menu cache
+    - Restart Windows Explorer
+  when: windows_startmenu_pinned_list | length > 0
+
+- name: Set ConfigureStartPins registry (Start Menu pins)  absent
+  ansible.windows.win_regedit:
+    path: HKLM:\Software\Policies\Microsoft\Windows\Explorer
+    name: ConfigureStartPins
+    state: absent
+  notify:
+    - Clear start menu cache
+    - Restart Windows Explorer
+  when: windows_startmenu_pinned_list | length == 0

@@ -1,0 +1,6 @@
+---
+# - name: Configure Start Menu pins
+#   ansible.builtin.include_tasks: startmenu-pins.yaml
+
+- name: Configure Start Menu settings
+  ansible.builtin.include_tasks: startmenu-settings.yaml

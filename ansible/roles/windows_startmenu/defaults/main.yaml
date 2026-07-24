@@ -1,0 +1,27 @@
+---
+# Start Menu pinned apps — each item is a dict with a single key: the pin type
+# and its value as the path or App ID.
+# Supported types: desktopAppLink, packagedAppId, desktopAppId
+# Example:
+#   windows_startmenu_pinned_list:
+#     - desktopAppLink: "%ALLUSERSPROFILE%\\Microsoft\\Windows\\Start Menu\\Programs\\Microsoft Edge.lnk"
+#     - packagedAppId: "MSTeams_8wekyb3d8bbwe!MSTeams"
+windows_startmenu_pinned_list: []
+
+# Start Menu cache directories to clear on change
+windows_startmenu_cache_paths:
+  - "{{ ansible_env.LOCALAPPDATA }}\\Packages\\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\\LocalState"
+  - "{{ ansible_env.LOCALAPPDATA }}\\Packages\\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\\TempState"
+  - "{{ ansible_env.LOCALAPPDATA }}\\Packages\\Microsoft.Windows.ShellExperienceHost_cw5n1h2txyewy\\LocalState"
+  - "{{ ansible_env.LOCALAPPDATA }}\\Packages\\Microsoft.Windows.ShellExperienceHost_cw5n1h2txyewy\\TempState"
+  - "{{ ansible_env.LOCALAPPDATA }}\\Packages\\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\\LocalState"
+  - "{{ ansible_env.LOCALAPPDATA }}\\Packages\\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\\TempState"
+
+# Start Menu behaviour toggles
+windows_startmenu_hide_recent: true
+windows_startmenu_hide_recommended: true
+windows_startmenu_hide_recently_added: true
+windows_startmenu_hide_most_used: true
+windows_startmenu_disable_recent_docs: false
+windows_startmenu_disable_bing_search: true
+windows_startmenu_disable_store_recommendations: true
