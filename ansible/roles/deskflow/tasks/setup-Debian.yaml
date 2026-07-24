@@ -1,0 +1,7 @@
+---
+- name: Install Deskflow via flatpak
+  community.general.flatpak:
+    name: org.deskflow.deskflow
+    state: present
+    method: system
+  become: true

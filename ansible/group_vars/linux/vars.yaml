@@ -11,6 +11,7 @@ linux_roles:
   - wezterm
   - vivaldi
   - bitwarden
+  - deskflow
 
 become_roles:
   - geerlingguy.docker

@@ -11,3 +11,4 @@ excluded_roles:
   - kitty
   - vivaldi
   - bitwarden
+  - deskflow
