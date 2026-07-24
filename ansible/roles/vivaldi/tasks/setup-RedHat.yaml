@@ -1,4 +1,5 @@
 ---
+# TODO: why is this always marked as changed?
 - name: Add Vivaldi repository
   ansible.builtin.yum_repository:
     name: vivaldi

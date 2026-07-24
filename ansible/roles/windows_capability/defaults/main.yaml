@@ -1,1 +1,7 @@
 ---
+# WARNING: no reverting is implemented — this role permanently removes Windows
+# capabilities via Remove-WindowsCapability -Online. These are OS-level feature
+# packages that affect system functionality (e.g. handwriting recognition,
+# speech, Windows Hello face). Restoring them requires running
+# Add-WindowsCapability -Online with the exact capability name, and may need
+# Windows Update access or the original installation media.

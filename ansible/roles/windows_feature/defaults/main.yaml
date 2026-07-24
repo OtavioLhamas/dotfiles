@@ -1,1 +1,5 @@
 ---
+# WARNING: no reverting is implemented — this role disables Windows optional
+# features with the -Remove flag, which deletes the feature payload from disk,
+# not just toggles it off. Re-enabling requires Enable-WindowsOptionalFeature
+# -Online, which must re-download the feature files via Windows Update.

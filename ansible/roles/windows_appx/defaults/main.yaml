@@ -1,1 +1,6 @@
 ---
+# WARNING: no reverting is implemented — this role permanently removes AppX
+# packages from the system image via Remove-AppxProvisionedPackage -Online.
+# Once deprovisioned, packages are unavailable even for new user accounts.
+# Restoring them requires manually reinstalling each package from the Microsoft
+# Store or via Add-AppxPackage with the correct package name and version.
