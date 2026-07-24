@@ -1,0 +1,9 @@
+---
+sigma_file_manager_github_repo: "aleksey-hoffman/sigma-file-manager"
+
+sigma_file_manager_appimage_name: "Sigma-File-Manager.AppImage"
+sigma_file_manager_install_dir: "/usr/local/bin"
+sigma_file_manager_desktop_dir: "/usr/local/share/applications"
+sigma_file_manager_icon_dir: "/usr/local/share/icons/hicolor/256x256/apps"
+sigma_file_manager_icon_name: "sigma-file-manager.png"
+sigma_file_manager_force_reinstall: false

@@ -192,6 +192,14 @@ properties:
       settings:
         id: qBittorrent.qBittorrent
         source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: SigmaFileManager
+      directives:
+        securityContext: current
+      settings:
+        id: AlekseyHoffman.SigmaFileManager
+        source: winget
 {{- end }}
 
 {{- if has "development" .categories }}
