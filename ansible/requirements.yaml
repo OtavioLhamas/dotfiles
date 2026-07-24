@@ -2,3 +2,7 @@
 roles:
   - name: geerlingguy.docker
 
+collections:
+  - name: ansible.windows
+  - name: community.windows
+
