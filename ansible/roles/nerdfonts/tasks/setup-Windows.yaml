@@ -80,6 +80,7 @@
       $Ansible.Result = $results
   register: font_registry_entries
   when: found_fonts.files | length > 0
+  changed_when: false
 
 - name: Register fonts in registry
   ansible.windows.win_regedit:
