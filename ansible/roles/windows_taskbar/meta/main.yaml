@@ -1,0 +1,10 @@
+---
+galaxy_info:
+  author: ""
+  description: "Configure Windows 11 Taskbar layout"
+  license: ""
+  min_ansible_version: ""
+  platforms:
+    - name: Windows
+  galaxy_tags: []
+dependencies: []

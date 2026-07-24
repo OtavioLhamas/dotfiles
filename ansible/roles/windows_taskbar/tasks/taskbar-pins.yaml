@@ -1,0 +1,56 @@
+---
+- name: Deploy Taskbar XML
+  ansible.windows.win_template:
+    src: TaskbarLayout.xml.j2
+    dest: "{{ windows_taskbar_layout_path }}"
+  notify:
+    - Restart Windows Explorer
+  when: windows_taskbar_pinned_list | length > 0
+
+- name: Remove Taskbar XML
+  ansible.windows.win_file:
+    path: "{{ windows_taskbar_layout_path }}"
+    state: absent
+  notify:
+    - Restart Windows Explorer
+  when: windows_taskbar_pinned_list | length == 0
+
+- name: Set StartLayoutFile registry present
+  ansible.windows.win_regedit:
+    path: HKLM:\Software\Policies\Microsoft\Windows\Explorer
+    name: StartLayoutFile
+    data: "{{ windows_taskbar_layout_path }}"
+    type: expandstring
+    state: present
+  when: windows_taskbar_pinned_list | length > 0
+  notify:
+    - Restart Windows Explorer
+
+- name: Set StartLayoutFile registry absent
+  ansible.windows.win_regedit:
+    path: HKLM:\Software\Policies\Microsoft\Windows\Explorer
+    name: StartLayoutFile
+    state: absent
+  when: windows_taskbar_pinned_list | length == 0
+  notify:
+    - Restart Windows Explorer
+
+- name: Set LockedStartLayout registry
+  ansible.windows.win_regedit:
+    path: HKLM:\Software\Policies\Microsoft\Windows\Explorer
+    name: LockedStartLayout
+    data: 0
+    type: dword
+    state: present
+  when: windows_taskbar_pinned_list | length > 0
+  notify:
+    - Restart Windows Explorer
+
+- name: Remove LockedStartLayout registry
+  ansible.windows.win_regedit:
+    path: HKLM:\Software\Policies\Microsoft\Windows\Explorer
+    name: LockedStartLayout
+    state: absent
+  when: windows_taskbar_pinned_list | length == 0
+  notify:
+    - Restart Windows Explorer

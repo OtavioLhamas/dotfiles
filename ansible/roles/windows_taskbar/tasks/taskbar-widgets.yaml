@@ -1,0 +1,56 @@
+---
+- name: Stop Widgets process before removal
+  ansible.windows.win_shell: Get-Process *Widget* -ErrorAction SilentlyContinue | Stop-Process -Force
+  changed_when: false
+  when: windows_taskbar_disable_widgets
+
+- name: Remove Widgets AppX packages
+  ansible.windows.win_powershell:
+    script: |
+      param([string]$Selector)
+
+      $removed = $false
+
+      $provisioned = Get-AppxProvisionedPackage -Online -ErrorAction Continue |
+        Where-Object { $_.DisplayName -eq $Selector }
+
+      $installed = Get-AppxPackage -AllUsers -ErrorAction Continue |
+        Where-Object { $_.Name -eq $Selector }
+
+      if ($provisioned) {
+        foreach ($pkg in $provisioned) {
+          try {
+            Remove-AppxProvisionedPackage -Online -PackageName $pkg.PackageName -AllUsers -ErrorAction Continue | Out-Null
+            $removed = $true
+          } catch {
+            Write-Warning "Failed to deprovision $($pkg.PackageName): $_"
+          }
+        }
+      }
+
+      if ($installed) {
+        foreach ($pkg in $installed) {
+          try {
+            Remove-AppxPackage -Package $pkg.PackageFullName -AllUsers -ErrorAction Continue | Out-Null
+            $removed = $true
+          } catch {
+            Write-Warning "Failed to remove $($pkg.PackageFullName): $_"
+          }
+        }
+      }
+
+      Write-Output $removed
+    parameters:
+      Selector: "{{ package }}"
+  loop:
+    - Microsoft.WidgetsPlatformRuntime
+    - MicrosoftWindows.Client.WebExperience
+  loop_control:
+    loop_var: package
+  register: widget_removal
+  changed_when: widget_removal.output[0]
+  become: true
+  become_method: runas
+  become_user: "{{ ansible_facts['user_id'] }}"
+  when: windows_taskbar_disable_widgets
+  notify: Restart Windows Explorer

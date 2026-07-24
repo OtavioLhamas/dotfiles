@@ -1,0 +1,33 @@
+---
+# TaskbarAl (centered icons)
+- name: Set TaskbarAl
+  ansible.windows.win_regedit:
+    path: HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
+    name: TaskbarAl
+    data: "{{ windows_taskbar_centered | ternary('1', '0') }}"
+    type: dword
+    state: present
+  notify:
+    - Restart Windows Explorer
+
+# SearchboxTaskbarMode (0=hidden, 1=icon, 2=box)
+- name: Set SearchboxTaskbarMode
+  ansible.windows.win_regedit:
+    path: HKCU:\Software\Microsoft\Windows\CurrentVersion\Search
+    name: SearchboxTaskbarMode
+    data: "{{ windows_taskbar_search_mode | string }}"
+    type: dword
+    state: present
+  notify:
+    - Restart Windows Explorer
+
+# ShowTaskViewButton
+- name: Set ShowTaskViewButton
+  ansible.windows.win_regedit:
+    path: HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
+    name: ShowTaskViewButton
+    data: "{{ windows_taskbar_show_task_view | ternary('1', '0') }}"
+    type: dword
+    state: present
+  notify:
+    - Restart Windows Explorer

@@ -1,0 +1,21 @@
+---
+# Taskbar pinned apps — each item is a dict with type (DesktopApp or UWA)
+# and app_id (DesktopApplicationID or AppUserModelID).
+# Example:
+#   windows_taskbar_pinned_list:
+#     - type: DesktopApp
+#       app_id: "Microsoft.Windows.Explorer"
+#     - type: UWA
+#       app_id: "MSTeams_8wekyb3d8bbwe!MSTeams"
+windows_taskbar_pinned_list: []
+windows_taskbar_layout_path: "C:\\ProgramData\\StartTaskbar\\TaskbarLayout.xml"
+
+# WARNING: no reverting is implemented — once removed, Widgets cannot be
+# restored via this role, and might not be easily reverted manually.
+# Set to true only if you are sure.
+windows_taskbar_disable_widgets: true
+
+# Taskbar behaviour toggles
+windows_taskbar_centered: false
+windows_taskbar_search_mode: 0 # 0 = hidden; 1 = icon; 2 = box;
+windows_taskbar_show_task_view: false

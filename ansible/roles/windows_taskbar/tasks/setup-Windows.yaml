@@ -1,0 +1,9 @@
+---
+# - name: Configure Taskbar pins
+#   ansible.builtin.include_tasks: taskbar-pins.yaml
+
+- name: Configure Taskbar settings
+  ansible.builtin.include_tasks: taskbar-settings.yaml
+
+- name: Disable Widgets
+  ansible.builtin.include_tasks: taskbar-widgets.yaml

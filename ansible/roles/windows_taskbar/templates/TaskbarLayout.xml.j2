@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LayoutModificationTemplate
+    xmlns="http://schemas.microsoft.com/Start/2014/LayoutModification"
+    xmlns:defaultlayout="http://schemas.microsoft.com/Start/2014/FullDefaultLayout"
+    xmlns:start="http://schemas.microsoft.com/Start/2014/StartLayout"
+    xmlns:taskbar="http://schemas.microsoft.com/Start/2014/TaskbarLayout"
+    Version="1">
+  <CustomTaskbarLayoutCollection PinListPlacement="Replace">
+    <defaultlayout:TaskbarLayout>
+      <taskbar:TaskbarPinList>
+{% for pin in windows_taskbar_pinned_list %}
+{% if pin.type == "DesktopApp" %}
+        <taskbar:DesktopApp DesktopApplicationID="{{ pin.app_id }}" />
+{% elif pin.type == "UWA" %}
+        <taskbar:UWA AppUserModelID="{{ pin.app_id }}" PinGeneration="1" />
+{% endif %}
+{% endfor %}
+      </taskbar:TaskbarPinList>
+    </defaultlayout:TaskbarLayout>
+  </CustomTaskbarLayoutCollection>
+</LayoutModificationTemplate>
