@@ -200,6 +200,15 @@ properties:
       settings:
         id: AlekseyHoffman.SigmaFileManager
         source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: SumatraPDF
+      directives:
+        securityContext: current
+      settings:
+        id: SumatraPDF.SumatraPDF
+        source: winget
+
 {{- end }}
 
 {{- if has "development" .categories }}
