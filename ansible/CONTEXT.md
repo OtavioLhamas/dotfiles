@@ -2,6 +2,8 @@
 
 System-wide configuration and provisioning. Ansible applies roles to the local machine (and optionally a Windows host over SSH) for multi-step installations requiring repository setup, GPG keys, flatpaks, services, or post-install handlers.
 
+Like the rest of the project, this is **provisioning**, not declarative management: roles install and configure declared settings but never uninstall packages, revert settings, or converge the system back to the declared state.
+
 Simple single-package `apt/dnf install` from default repos should go in `.chezmoidata/packages.yaml` instead (Phase 3a) — not an Ansible role.
 
 ## Language

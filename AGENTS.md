@@ -2,7 +2,9 @@
 
 ## Project Overview
 
-This repository manages dotfiles, packages, installations, system configurations, and environment setup across multiple platforms. It is designed to work after a fresh OS install, on a new machine, or on a VPS.
+This repository brings a machine up to a **minimum desirable state** (see [README Scope](./README.md#scope)): it installs packages, places dotfiles, applies defaults, and configures systems across multiple platforms. It is designed to work after a fresh OS install, on a new machine, or on a VPS.
+
+This is a **provisioning** project, not a declarative configuration manager. It is **idempotent but not convergent**: it adds, overwrites, and configures toward the declared state, but never uninstalls, removes, or reconciles the system back to it. The declaration is a floor, not a ceiling.
 
 ## Domain Language
 
@@ -98,6 +100,7 @@ When `path/to/file` changes, the SHA256 in the comment changes → the script co
 ## Conventions
 
 - Always use `.yaml` extension, never `.yml`
+- Provisioning is **additive**: never add logic that uninstalls, removes, or reconciles the system toward the declared state — the declaration is a floor, not a ceiling
 - Ansible roles are single-responsibility (one role per concern)
 - `ansible/inventory.yaml` is fully regenerated on each `chezmoi apply` — never edit by hand
 - Keep `bootstrap.sh`/`bootstrap.ps1` minimal — they only install chezmoi

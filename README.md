@@ -3,7 +3,26 @@
 > [!WARNING]
 > This is a work in progress, current commit might be in a broken state
 
-A dotfiles and system configuration management project using **chezmoi**, **mise**, and **Ansible**, with the goal to create an idempotent, declarative setup that allows easy reproduction.
+A dotfiles and system configuration project using **chezmoi**, **mise**, and **Ansible**. Its purpose is to bring a fresh machine up to a **minimum desirable state** — install the software you want, apply your preferred defaults, and place your files — in an idempotent, repeatable way.
+
+## Scope
+
+This project is a **provisioning / bootstrap** tool, not a declarative configuration manager. It establishes a minimum desirable state and then steps aside; it does not continuously enforce that state.
+
+It **does**:
+
+- Install declared software (packages, toolchains, runtimes, GUI apps)
+- Place dotfiles and configs where they belong, overwriting managed files
+- Apply your preferred defaults and system settings
+- Stay **idempotent** — running it repeatedly yields the same result and is safe
+
+It does **not**:
+
+- **Uninstall** — software that isn't in the declaration is never removed
+- **Remove** — unmanaged files and configs are left alone (managed ones may be overwritten)
+- **Reconcile** — drift is not repaired, and the system is not converged back to the declared state
+
+In short: the declaration is a **floor, not a ceiling**. Anything you add or change on the machine after provisioning is left untouched on subsequent runs.
 
 ## Quick Start
 

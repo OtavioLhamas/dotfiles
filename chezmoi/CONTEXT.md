@@ -4,6 +4,10 @@ Dotfiles source state and machine bootstrap. Chezmoi manages user-space configur
 
 ## Language
 
+**Provisioning / Minimum Desirable State**:
+The scope of this project (project-wide). A provisioning pipeline that installs declared software, places dotfiles, and applies defaults in an idempotent, **additive** way. It is **not convergent**: it never uninstalls, removes, or reconciles the system back to the declaration, and it does not repair drift. The declaration is a floor, not a ceiling.
+_Avoid_: Declarative management, state enforcement, convergence
+
 **Source State**:
 The `chezmoi/` directory tree containing all managed dotfiles, templates, scripts, and data. This is chezmoi's input — never the deployed output in `$HOME`.
 _Avoid_: Dotfiles repo, config directory
