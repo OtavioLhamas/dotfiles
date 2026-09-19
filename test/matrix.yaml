@@ -1,0 +1,125 @@
+# Source of truth for test-suite images and scenarios.
+#
+# A scenario is image x data x env x expect.
+#   data    : pre-seeded into the target's chezmoi config (bypasses classification prompts)
+#   env     : injected into the chezmoi init/apply process environment
+#   expect  : declared outcomes, incl. known failures (xfail)
+#
+# Lint-only for now; `lane` records the eventual lane and
+# is not executed yet. Distro-faithful rendering only happens in the container/VM
+# lanes — host lint renders with the host's .chezmoi.os/osRelease.
+version: 1
+
+defaults:
+  # Default `nix` dimension for Linux scenarios.
+  nix: true
+  # Per-distro defaults: resolve an image when only --distro is given, and
+  # synthesize ephemeral scenarios for variant overrides.
+  distros:
+    ubuntu:
+      os: linux
+      default_image: ubuntu-24.04
+    debian:
+      os: linux
+      default_image: debian-13
+    fedora:
+      os: linux
+      default_image: fedora-44
+    windows-11:
+      os: windows
+      default_image: windows-11
+
+images:
+  ubuntu-24.04:
+    type: cloud
+    os: linux
+    distro: ubuntu
+    lane: vm
+    url: "https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-amd64.img"
+    sha256: ""
+  debian-13:
+    type: cloud
+    os: linux
+    distro: debian
+    lane: vm
+    url: ""
+    sha256: ""
+  fedora-44:
+    type: cloud
+    os: linux
+    distro: fedora
+    lane: vm
+    url: ""
+    sha256: ""
+  windows-11:
+    type: windows-baked
+    os: windows
+    distro: windows-11
+    lane: windows
+
+scenarios:
+  ubuntu-24.04-desktop-dev:
+    image: ubuntu-24.04
+    lane: vm
+    data: {categories: [development, personal], form_factor: desktop}
+    env: {XDG_CURRENT_DESKTOP: GNOME, XDG_SESSION_TYPE: wayland}
+    expect: {apply_exit: 0}
+
+  ubuntu-24.04-desktop-work-multimedia:
+    image: ubuntu-24.04
+    lane: vm
+    data: {categories: [work, multimedia], form_factor: desktop}
+    env: {}
+    expect: {apply_exit: 0}
+
+  ubuntu-24.04-laptop-gaming:
+    image: ubuntu-24.04
+    lane: vm
+    data: {categories: [gaming], form_factor: laptop}
+    env: {}
+    expect: {apply_exit: 0}
+
+  ubuntu-24.04-server:
+    image: ubuntu-24.04
+    lane: vm
+    data: {categories: [personal], form_factor: server}
+    env: {}
+    expect: {apply_exit: 0}
+
+  ubuntu-24.04-desktop-cosmic:
+    image: ubuntu-24.04
+    lane: vm
+    data: {categories: [development], form_factor: desktop}
+    env: {XDG_CURRENT_DESKTOP: cosmic, XDG_SESSION_TYPE: wayland}
+    expect: {apply_exit: 0}
+
+  # niri is not derivable from XDG_CURRENT_DESKTOP in .chezmoi.yaml.tmpl today,
+  # so the variant sets the classification explicitly in data.
+  ubuntu-24.04-desktop-niri:
+    image: ubuntu-24.04
+    lane: vm
+    data: {categories: [development], form_factor: desktop, desktop_environment: niri, display_server: wayland}
+    env: {}
+    expect: {apply_exit: 0}
+
+  debian-13-desktop-dev:
+    image: debian-13
+    lane: vm
+    data: {categories: [development], form_factor: desktop}
+    env: {XDG_CURRENT_DESKTOP: GNOME, XDG_SESSION_TYPE: x11}
+    expect: {apply_exit: 0}
+
+  fedora-44-desktop-dev:
+    image: fedora-44
+    lane: vm
+    data: {categories: [development], form_factor: desktop}
+    env: {}
+    expect: {apply_exit: 0, known_failures: [wezterm]}
+
+  windows-11-desktop-dev:
+    image: windows-11
+    lane: windows
+    nix: false
+    data: {categories: [development, personal], form_factor: desktop}
+    env: {}
+    expect: {apply_exit: 0}

@@ -16,7 +16,7 @@ if command -v chezmoi &>/dev/null; then
 
     # Check specific scripts (NOTE: all .chezmoiscripts should be .tmpl files)
     if [ -d "chezmoi/.chezmoiscripts" ]; then
-        for script in chezmoi/.chezmoiscripts/run_after_*.sh.tmpl; do
+        for script in chezmoi/.chezmoiscripts/run_after_*.sh.tmpl chezmoi/.chezmoiscripts/run_onchange_after_*.sh.tmpl; do
             if [ -f "$script" ]; then
                 # Generate the script from template and syntax check it
                 chezmoi execute-template --source chezmoi <"$script" | bash -n || {
@@ -36,11 +36,16 @@ if command -v ansible-playbook &>/dev/null; then
     if [ -f "ansible/inventory.yaml" ] && [ -f "ansible/main.yaml" ]; then
         echo "Running ansible-playbook --check..."
 
+        BECOME_FLAGS=(-K)
+        if [ -n "${DOTFILES_TEST:-}" ]; then
+            BECOME_FLAGS=(--become-password-file "${DOTFILES_TEST_BECOME_FILE:-/dev/null}")
+        fi
+
         ansible-playbook \
             -i ansible/inventory.yaml \
+            "${BECOME_FLAGS[@]}" \
             --check \
             --diff \
-            "$EXTRA_VARS" \
             ansible/main.yaml || {
             echo "ERROR: Ansible dry run failed"
             FAILED=1

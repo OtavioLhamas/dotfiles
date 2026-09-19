@@ -23,3 +23,11 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# Test harness artifacts
+test/logs/
+test/images/golden/
+test/images/windows/build/
+test/images/*.iso
+test/images/*.qcow2
+test/run/
