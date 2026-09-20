@@ -1,0 +1,28 @@
+# User-level package list
+#
+# Placement rules:
+#   1. mise is king: if a tool is in the mise registry it goes in
+#      dot_config/mise/config.toml
+#   2. System-level packages (compilers, docker, flatpak) belong to
+#      requirements.yaml / packages.yaml / Ansible — not here.
+#   3. This list is for user-space packages that would otherwise be an
+#      Ansible role or packages.yaml entry.
+
+{ config, pkgs, lib, machine, ... }:
+
+{
+  # home.packages: a list of derivations (packages) symlinked into
+  # ~/.nix-profile. `with pkgs;` brings package names into scope so you
+  # can write [ htop ripgrep ] instead of [ pkgs.htop pkgs.ripgrep ].
+  home.packages = with pkgs; [
+  ] ++
+  # `lib.optionals cond list` = list when cond is true, [ ] otherwise.
+  # The rendered `machine.distro` is a plain string ("pop", "fedora", ...),
+  # so this becomes a static Nix if/else at render time.
+  lib.optionals (machine.distro == "fedora") [
+    # fedora-only user packages (Phase 2)
+  ] ++
+  lib.optionals (machine.distro == "cachyos") [
+    # cachyos-only user packages (Phase 2)
+  ];
+}

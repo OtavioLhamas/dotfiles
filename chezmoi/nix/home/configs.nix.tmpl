@@ -1,0 +1,22 @@
+# User-level configuration: dconf/GNOME settings, terminal config,
+# compositor settings, fonts. Migrated from Ansible roles in Phase 3.
+#
+# WARN: chezmoi owns files (dot_bashrc, tool configs,
+# plugin lists inside tool configs). Home Manager here only owns
+# *state/settings* — dconf keys, session env — never a file chezmoi
+# already deploys.
+{ config, pkgs, lib, machine, ... }:
+
+{
+  # --- Desktop environment settings ------------------------------
+  # The rendered machine.desktopEnvironment is a plain string baked in by
+  # chezmoi (.chezmoi.yaml.tmpl classifies it from XDG_CURRENT_DESKTOP).
+
+  # dconf.settings writes GNOME's settings database (gsettings). Declared
+  # only on GNOME machines; `mkIf` makes the whole block vanish (no
+  # empty dconf database churn) when the DE isn't GNOME.
+  dconf.settings = lib.mkIf (machine.desktopEnvironment == "gnome") {
+    # GNOME settings migrated in Phase 3. Example shape:
+    # "org/gnome/desktop/interface" = { color-scheme = "prefer-dark"; };
+  };
+}

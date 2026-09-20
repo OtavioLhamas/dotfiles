@@ -1,0 +1,34 @@
+# Shared module: applies to EVERY machine, regardless of classification.
+# This is the right place for anything true everywhere: identity, editor
+# defaults, Home Manager's own self-management.
+#
+# Module header convention: `{ config, pkgs, lib, ... }:` receives the
+# module system's standard arguments. The `...` swallows the rest.
+# flake.nix additionally passes `machine` via extraSpecialArgs — modules
+# that need it list it in the braces (see configs.nix).
+{ config, pkgs, lib, machine, ... }:
+
+{
+  home.username = "{{ .chezmoi.username }}";
+  home.homeDirectory = "{{ .chezmoi.homeDir }}";
+
+  # The Home Manager release this config was written against. Options may
+  # change meaning between releases; stateVersion tells HM "interpret my
+  # config with THESE defaults" — it is NOT the version being installed
+  # and must be bumped deliberately, never automatically. It tracks the
+  # home-manager release branch pinned in flake.nix (release-26.05).
+  home.stateVersion = "26.05";
+
+  # WARN: Home Manager owns packages, services and *state* — it
+  # must NEVER own a config file chezmoi deploys. Do not enable
+  # file-producing options like home.file, xdg.configFile or programs.<tool>
+  # for tools whose config lives in the chezmoi source tree.
+
+  # Shell init and shell environment are NOT owned here: chezmoi
+  # owns the shell files, and mise's [env] table is the single source for
+  # shared env vars (EDITOR, MANPAGER, ...). Do not add home.sessionVariables —
+  # nothing would source hm-session-vars.sh, and it would duplicate mise.
+
+  # Installs/updates the `home-manager` CLI itself into the user profile
+  programs.home-manager.enable = true;
+}

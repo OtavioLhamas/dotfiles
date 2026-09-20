@@ -1,0 +1,41 @@
+#!/bin/bash
+# Home Manager activation — Linux/WSL only.
+# Runs after mise (mise wins PATH, rule 1) and before Ansible (Phase 3b).
+#
+# Change detection hashes the RENDERED flake files (includeTemplate), so a
+# re-render — including a machine-classification change — re-triggers the
+# switch. Hashing the raw .tmpl source would miss classification changes.
+# flake.nix: {{ includeTemplate "nix/flake.nix.tmpl" . | sha256sum }}
+# flake.lock: {{ include "nix/flake.lock" | sha256sum }}
+# common.nix: {{ includeTemplate "nix/home/common.nix.tmpl" . | sha256sum }}
+# packages.nix: {{ includeTemplate "nix/home/packages.nix.tmpl" . | sha256sum }}
+# services.nix: {{ includeTemplate "nix/home/services.nix.tmpl" . | sha256sum }}
+# configs.nix: {{ includeTemplate "nix/home/configs.nix.tmpl" . | sha256sum }}
+
+set -euo pipefail
+
+# Source the daemon profile so `nix` / `home-manager` are on PATH even in
+# this non-login, non-interactive script context.
+# shellcheck disable=SC1091
+if [ -e /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
+    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+fi
+
+if ! command -v home-manager &>/dev/null; then
+    echo "home-manager not found; installing it into the default Nix profile..."
+    nix profile install \
+        --experimental-features 'nix-command flakes' \
+        nixpkgs#home-manager
+fi
+
+# The flake is chezmoi-DEPLOYED (rendered) to ~/nix — a plain directory,
+# so the git-tracked-files restriction does not apply. Nix copies it into
+# the store; no --impure needed (classification is baked in at render time).
+# The configuration is keyed by the hostname chezmoi rendered into the
+# flake — same value on both sides, no hardcoded machine name.
+echo "Running home-manager switch (flake: $NIX_DIR#{{ .chezmoi.hostname }})..."
+home-manager switch \
+    --experimental-features 'nix-command flakes' \
+    --flake "$NIX_DIR#{{ .chezmoi.hostname }}"
+
+echo "Home Manager generation applied."

@@ -16,6 +16,7 @@ See [CONTEXT-MAP.md](./CONTEXT-MAP.md) for context boundaries and glossaries ([c
 |------|------|
 | **chezmoi** | Dotfiles source state, machine classification prompts, lifecycle scripts |
 | **mise** | User-space development tools and languages |
+| **Nix / Home Manager** | User-level packages + configs on Linux/WSL (flake in `chezmoi/nix/`); never duplicates mise-managed tools or chezmoi-managed files |
 | **Ansible** | System-wide configuration requiring multi-step setup (repos, GPG keys, flatpaks, services) |
 | **WinGet DSC** | Windows native declarative package management |
 
@@ -43,6 +44,7 @@ Provisioning is organized around dependency layers, not around tools. Every phas
 | Is it a compiler/build-tool/dev-library? | → `requirements.yaml` (Phase 1) |
 | Is it in the mise registry? | → `dot_config/mise/config.toml` (Phase 2) |
 | Is it Windows native and available via winget? | → `dot_config/winget.dsc.yaml` (Phase 2) |
+| Is it a user-space package not in mise, or user-level config that would be an Ansible role? | → `chezmoi/nix/` Home Manager flake (Phase 3) |
 | Is it a single `apt/dnf install` from default repos? | → `.chezmoidata/packages.yaml` (Phase 3a) |
 | Does it need repo setup, GPG key, flatpak, or post-install? | → Ansible role (Phase 3b) |
 
@@ -65,15 +67,17 @@ chezmoi execute-template --source ./chezmoi < template.tmpl
 5. Dotfiles deployed (mise config.toml, winget.dsc.yaml, etc.)
 6. `run_onchange_after_20-mise-install` → runs `mise install` (only when config.toml changes)
 7. `run_onchange_after_25-winget-configure` → runs `winget configure` (only when DSC changes, Windows only)
-8. `run_onchange_after_30-install-packages` → installs simple packages from `.chezmoidata/packages.yaml` (only when file changes)
-9. `run_after_40-ansible-provision` → generates `ansible/inventory.yaml`, runs Ansible playbook
-10. `run_after_50-wsl` → WSL setup (Windows only)
+8. `run_once_before_15-install-nix` → installs Nix (multi-user daemon, one-time, Linux/WSL only)
+9. `run_onchange_after_35-home-manager-switch` → runs `home-manager switch --flake "$NIX_DIR#otavio"` with machine classification exported as `CHEZMOI_*` env vars (change-detected, Linux/WSL only; after mise so mise wins PATH, before Ansible)
+10. `run_onchange_after_30-install-packages` → installs simple packages from `.chezmoidata/packages.yaml` (only when file changes)
+11. `run_after_40-ansible-provision` → generates `ansible/inventory.yaml`, runs Ansible playbook
+12. `run_after_50-wsl` → WSL setup (Windows only)
 
 ### Windows Support
 
 - **Native Windows 11**: Uses PowerShell + WinGet DSC + PowerShell scripts. Ansible is not run.
 - **WSL**: Runs the full Linux flow. Ansible targets both WSL `localhost` and the Windows native host via SSH.
-- `dry-run.sh` has a known bug: `$EXTRA_VARS` is unbound — the Ansible section will fail. The chezmoi section is the useful one.
+- `test/dry-run.sh` is interactive by design (uses `-K` unless `DOTFILES_TEST` is set); use `test/run.sh run --stage lint --all` for the non-interactive path.
 - Health check warnings about Bitwarden being unauthenticated or mise version updates are expected in dev environments — not failures.
 
 ## Templating
@@ -82,6 +86,7 @@ chezmoi execute-template --source ./chezmoi < template.tmpl
 - Prefer template conditionals (`{{ if }}`, `{{ range }}`) over shell conditionals
 - Use `.chezmoi.*` variables for OS/arch/distro detection at template time
 - Reusable template snippets live in `.chezmoitemplates/` (e.g., `package` for category-filtered package installation)
+- Machine classification (desktop environment, display server) lives in `.chezmoi.yaml.tmpl`; the test runner derives DE/DS for a scenario by rendering that template, so the two never drift
 - `.chezmoihooks/` scripts are the **only** non-template files — they run before chezmoi parses anything
 - `scriptEnv` in `.chezmoi.yaml.tmpl` provides environment variables to all scripts and hooks
 
@@ -107,12 +112,32 @@ When `path/to/file` changes, the SHA256 in the comment changes → the script co
 - Windows native uses PowerShell + WinGet DSC; Ansible is not run on Windows native
 - Under WSL, Ansible targets both `localhost` and `windows_native` (via SSH to Windows host IP)
 - `scriptEnv` in chezmoi config provides shared environment variables to all scripts
+- Shared shell environment variables (EDITOR, MANPAGER, FZF_*, ...) are single-sourced in mise's `[env]` table (`dot_config/mise/config.toml.tmpl`) — not duplicated per shell, and never `home.sessionVariables`
+- Test artifacts (`test/logs/`, `test/images/golden/`, built ISOs/qcow2 images, `test/run/`) are gitignored and never committed
 
 ## Testing
 
-After making changes, always verify:
+The test suite is a non-interactive harness driven by `test/run.sh`. Use it instead of the legacy scripts.
+
+Run this before finishing any change (seconds, no target needed):
 
 ```bash
-./test/health-check.sh
-./test/dry-run.sh
+./test/run.sh run --stage lint --all
 ```
+
+| Command | Purpose |
+|---------|---------|
+| `./test/run.sh run --stage lint --all` | Host-only lint across every scenario data variant |
+| `./test/run.sh doctor-host` | Report which lanes (lint/container/vm/windows) are usable on this machine |
+| `./test/run.sh scenarios` | List scenarios from `test/matrix.yaml` |
+| `./test/run.sh run --list [selectors]` | Resolve and print targets without executing |
+
+Selectors are AND-composed: `--scenario`, `--image`, `--distro`, `--os`, `--lane`. Variant overrides (`--de`, `--ds`, `--form`, `--category`) synthesize an ephemeral scenario when no `--scenario` is given. Other flags: `--stage <list>`, `--parallel <n>`, `--fail-fast`, `--all`.
+
+Harness environment variables — set by the harness, **never in interactive shells**:
+
+- `DOTFILES_TEST` — switches `run_after_40-ansible-provision` and `test/dry-run.sh` from interactive `-K` to non-interactive `--become-password-file`.
+- `DOTFILES_TEST_BECOME_FILE` — path to the become-password file (empty for NOPASSWD sudo).
+- `DOTFILES_TEST_EXCLUDE_ROLES` — comma list rendered as an `excluded_roles` extra-var.
+
+The legacy scripts remain: `./test/health-check.sh` (host health check) and `./test/dry-run.sh` (chezmoi + Ansible dry run). `dry-run.sh` stays **interactive by design** — it uses `-K` unless `DOTFILES_TEST` is set. Phase E replaces both with thin wrappers around the runner.

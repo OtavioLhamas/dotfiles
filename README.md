@@ -118,6 +118,7 @@ Provisioning is organized around **dependency layers** (phases), not around tool
 |------|---------|
 | **chezmoi** | Dotfiles management, machine classification prompts, phase orchestration |
 | **mise** | User-space development tool installation (languages, CLI tools) |
+| **Nix / Home Manager** | User-level packages and configs on Linux/WSL (flake in `chezmoi/nix/`) |
 | **Ansible** | System-wide configuration requiring multi-step setup (repos, GPG keys, flatpaks, services) |
 | **WinGet DSC** | Windows native declarative package/configuration management |
 
@@ -134,6 +135,7 @@ test/dry-run.sh
 ## Directory Structure
 
 - `chezmoi/` — Chezmoi source state (dotfiles, scripts, hooks, templates)
+- `chezmoi/nix/` — Home Manager flake (user-level packages/configs, Linux/WSL; not deployed to `$HOME`)
 - `ansible/` — Ansible playbooks, roles, group_vars, inventory
 - `test/` — Health check and dry-run scripts
 
@@ -152,6 +154,7 @@ These classifications drive conditional dotfile installation and Ansible role se
 - **requirements.yaml** — Phase 1: native toolchains (compilers, build tools, dev libraries)
 - **mise config.toml** — Phase 2: language runtimes and CLI tools
 - **WinGet DSC** — Phase 2: Windows native packages
+- **Nix / Home Manager** — Phase 3: user-level packages/configs not in the mise registry (Linux/WSL; `chezmoi/nix/` flake)
 - **packages.yaml** — Phase 3: simple `apt/dnf install` packages from default repos (htop, qbittorrent)
 - **Ansible** — Phase 3: multi-step installations requiring repo setup, GPG keys, flatpaks, or post-install handlers
 

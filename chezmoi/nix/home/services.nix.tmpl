@@ -1,0 +1,16 @@
+# User services — systemd user units managed by Home Manager.
+#
+# System services (docker daemon, flatpak remotes) stay on Ansible: they
+# need root and are not user-scoped. This file only declares services
+# running as the user (gpg-agent, etc.). Phase 3 migrates entries here.
+
+{ config, pkgs, lib, machine, ... }:
+
+{
+  # gpg-agent: caches GPG passphrases. Declared but OFF by default —
+  # mkDefault makes this a low-priority value that any other module can
+  # override without mkForce. Enabled per-machine in Phase 3.
+  services.gpg-agent = {
+    enable = lib.mkDefault false;
+  };
+}

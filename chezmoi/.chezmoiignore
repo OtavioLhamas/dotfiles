@@ -1,4 +1,5 @@
 CONTEXT.md
+nix/CONTEXT.md
 
 {{- if ne .chezmoi.os "windows" }}
 dot_config/winget.dsc.yaml.tmpl
@@ -13,4 +14,5 @@ Documents/*
 dot_bashrc
 dot_zshenv
 dot_config/external_fish
+nix/**
 {{- end }}

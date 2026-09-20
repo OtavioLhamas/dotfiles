@@ -1,0 +1,75 @@
+# inputs  — dependencies, pinned to exact commits in flake.lock
+# outputs — the things it can build (here: Home Manager configurations)
+#
+# The flake produces ONE output: a Home Manager configuration keyed by the
+# machine's hostname (injected by chezmoi so no machine name is hardcoded),
+# activated with:
+#   home-manager switch --flake "$NIX_DIR#{{ .chezmoi.hostname }}"
+
+{
+  description = "Home Manager config for Otavio's machines";
+
+  inputs = {
+    # The package set. Using stable release branch, pinned to an exact commit
+    # by flake.lock: package versions are frozen at release and only receive
+    # backported fixes.
+    # Fast-moving dev tools/Languages preferably come from mise instead.
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+
+    # The user-environment manager. The release branch MUST match the nixpkgs
+    # branch (26.05 <-> 26.05), or option meanings drift apart.
+    # `follows` makes Home Manager reuse OUR nixpkgs instead of fetching
+    # its own copy — one package set, no version mismatch.
+    home-manager = {
+      url = "github:nix-community/home-manager/release-26.05";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+
+  # `outputs` is a function from the pinned inputs to the outputs. The `...`
+  # in the argument pattern swallows any input we don't name.
+  outputs = { self, nixpkgs, home-manager, ... }:
+    let
+      # `let ... in ...` binds local variables before the expression after
+      # `in`. This flake targets x86_64 Linux only.
+      system = "x86_64-linux";
+
+      # `legacyPackages` is the full, unfiltered package set — the shape
+      # homeManagerConfiguration expects.
+      pkgs = nixpkgs.legacyPackages.${system};
+
+      # Machine classification, injected by chezmoi at render time.
+      machine = {
+        distro = "{{ .chezmoi.osRelease.id }}";
+        formFactor = "{{ .form_factor }}";
+        desktopEnvironment = "{{ .desktop_environment }}";
+        displayServer = "{{ .display_server }}";
+        categories = [
+{{ range .categories }}          "{{ . }}"
+{{ end }}        ];
+      };
+    in
+    {
+      # One Home Manager configuration per machine, keyed by the hostname
+      # chezmoi renders in ({{ .chezmoi.hostname }}). Nothing is hardcoded:
+      # each deployed flake carries exactly its own machine's entry.
+      homeConfigurations."{{ .chezmoi.hostname }}" = home-manager.lib.homeManagerConfiguration {
+        # `inherit pkgs;` is shorthand for `pkgs = pkgs;`.
+        inherit pkgs;
+
+        # extraSpecialArgs: extra arguments passed to EVERY module listed
+        # below. This is how `machine` reaches each module's
+        # `{ config, pkgs, lib, machine, ... }:` header.
+        extraSpecialArgs = { inherit machine; };
+
+        # The list of configuration modules, merged into one config by the
+        # module system (order doesn't matter; it merges by option name).
+        modules = [
+          ./home/common.nix
+          ./home/packages.nix
+          ./home/services.nix
+          ./home/configs.nix
+        ];
+      };
+    };
+}

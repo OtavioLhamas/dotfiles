@@ -1,0 +1,41 @@
+#!/bin/bash
+# One-time Nix (multi-user daemon) installation — Linux/WSL only.
+# Official installer: https://nixos.org/nix/install
+# flake: {{ includeTemplate "nix/flake.nix.tmpl" . | sha256sum }}
+
+set -euo pipefail
+
+if command -v nix &>/dev/null; then
+    echo "Nix already installed: $(nix --version)"
+    exit 0
+fi
+
+echo "Installing Nix (multi-user daemon)..."
+sh <(curl -L https://nixos.org/nix/install) --daemon
+
+# Source the daemon profile so `nix` is usable in this session.
+# shellcheck disable=SC1091
+if [ -e /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
+    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+fi
+
+# --- WSL 2: disable the Nix build sandbox (9P filesystem incompatibility) ---
+if grep -qi microsoft /proc/version 2>/dev/null; then
+    echo "WSL detected: disabling Nix build sandbox..."
+    sudo mkdir -p /etc/nix
+    echo 'sandbox = false' | sudo tee /etc/nix/nix.conf >/dev/null
+fi
+
+# --- Fedora / SELinux (documented, not scripted) ---
+# Fedora's SELinux policy blocks the Nix daemon. If `home-manager switch`
+# fails with permission errors, apply the documented relaxation manually:
+#   https://nixos.org/manual/nix/stable/installation/installing-nix#selinux
+# This is intentionally NOT automated (open decision: document-only).
+
+# Flakes are still experimental in Nix 2.x: persist the feature flags.
+mkdir -p "$HOME/.config/nix"
+if ! grep -q 'experimental-features' "$HOME/.config/nix/nix.conf" 2>/dev/null; then
+    echo 'experimental-features = nix-command flakes' >> "$HOME/.config/nix/nix.conf"
+fi
+
+echo "Nix installation complete."
