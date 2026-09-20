@@ -12,6 +12,10 @@
 {{-   $de = "cosmic" -}}
 {{- else if contains "gnome" $xdgDesktop -}}
 {{-   $de = "gnome" -}}
+{{- else if or (contains "kde" $xdgDesktop) (contains "plasma" $xdgDesktop) -}}
+{{-   $de = "kde" -}}
+{{- else if contains "niri" $xdgDesktop -}}
+{{-   $de = "niri" -}}
 {{- end -}}
 {{- $xdgSession := env "XDG_SESSION_TYPE" | lower -}}
 {{- $ds := "" -}}
@@ -23,6 +27,7 @@
 
 scriptEnv:
     ANSIBLE_DIR: "{{ .chezmoi.workingTree }}/ansible"
+    NIX_DIR: "{{ .chezmoi.homeDir }}/nix"
     LOCAL_BIN: "{{ .chezmoi.homeDir }}/.local/bin"
     MISE_BIN: "{{ .chezmoi.homeDir }}/.local/bin/mise"
 
