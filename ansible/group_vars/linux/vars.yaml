@@ -3,7 +3,6 @@ linux_roles:
   - flatpak
   - flameshot
   - geerlingguy.docker
-  - fish
   - zsh
   - kitty
   - rsync
@@ -16,5 +15,4 @@ linux_roles:
 become_roles:
   - geerlingguy.docker
   - flatpak
-  - fish
   - zsh
