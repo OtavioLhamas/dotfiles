@@ -1,0 +1,7 @@
+---
+# geerlingguy.docker has no Arch-specific repository setup, so let its generic
+# package tasks use the configured pacman repositories and Arch package names.
+docker_add_repo: false
+docker_packages:
+  - docker
+docker_compose_package: docker-compose
