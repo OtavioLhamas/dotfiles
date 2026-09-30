@@ -14,7 +14,10 @@
   # home.packages: a list of derivations (packages) symlinked into
   # ~/.nix-profile. `with pkgs;` brings package names into scope so you
   # can write [ htop ripgrep ] instead of [ pkgs.htop pkgs.ripgrep ].
+  # Tools in mise remain out of this list.
   home.packages = with pkgs; [
+    nerd-fonts.jetbrains-mono
+    nerd-fonts.hack
   ] ++
   # `lib.optionals cond list` = list when cond is true, [ ] otherwise.
   # The rendered `machine.distro` is a plain string ("pop", "fedora", ...),

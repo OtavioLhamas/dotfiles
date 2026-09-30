@@ -8,6 +8,9 @@
 { config, pkgs, lib, machine, ... }:
 
 {
+  # Make the user-level fonts installed from Nix visible to fontconfig.
+  fonts.fontconfig.enable = true;
+
   # --- Desktop environment settings ------------------------------
   # The rendered machine.desktopEnvironment is a plain string baked in by
   # chezmoi (.chezmoi.yaml.tmpl classifies it from XDG_CURRENT_DESKTOP).
