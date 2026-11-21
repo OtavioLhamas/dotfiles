@@ -38,7 +38,10 @@ if command -v ansible-playbook &>/dev/null; then
 
         BECOME_FLAGS=(-K)
         if [ -n "${DOTFILES_TEST:-}" ]; then
-            BECOME_FLAGS=(--become-password-file "${DOTFILES_TEST_BECOME_FILE:-/dev/null}")
+            # NOPASSWD sudo needs no become flag; only pass a password file
+            # when the harness supplied a real one (Ansible rejects empty).
+            BECOME_FLAGS=()
+            [ -n "${DOTFILES_TEST_BECOME_FILE:-}" ] && BECOME_FLAGS=(--become-password-file "$DOTFILES_TEST_BECOME_FILE")
         fi
 
         ansible-playbook \

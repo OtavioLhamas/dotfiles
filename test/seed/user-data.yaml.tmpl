@@ -1,0 +1,36 @@
+#cloud-config
+# Run seed — rendered host-side by test/lib/cloudinit.sh (@@TOKEN@@ substitution).
+# Gives every run the same starting contract: a NOPASSWD `provision` user with
+# the harness key, the GitHub SSH->HTTPS rewrite, and rsync (the sync
+# transport; openssh-server already ships in cloud images).
+users:
+  - name: provision
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    lock_passwd: true
+    ssh_authorized_keys:
+      - @@SSH_PUBKEY@@
+write_files:
+  - path: /etc/gitconfig
+    content: |
+      [url "https://github.com/"]
+        insteadOf = git@github.com:
+  # Allow the provision user to manage system flatpak remotes (no polkit auth).
+  # Ubuntu 24.04+ uses JavaScript rules.d format, not the older .pkla files.
+  - path: /usr/share/polkit-1/rules.d/10-flatpak.rules
+    content: |
+      polkit.addRule(function(action, subject) {
+          if (subject.user == "provision" && action.id.indexOf("org.freedesktop.Flatpak") == 0) {
+              return polkit.Result.YES;
+          }
+      });
+packages:
+  - rsync
+runcmd:
+  # Idempotent; the unit name differs by distro (ssh on Debian/Ubuntu, sshd on Fedora).
+  - systemctl enable --now ssh 2>/dev/null || systemctl enable --now sshd
+  # Flatpak system operations need polkit running (cloud images ship it but
+  # don't enable the daemon by default). restart ensures the new rules.d file
+  # is loaded even if polkitd was already started by another module.
+  - systemctl enable --now polkit 2>/dev/null || systemctl enable --now polkitd 2>/dev/null || true
+  - systemctl restart polkit 2>/dev/null || systemctl restart polkitd 2>/dev/null || true

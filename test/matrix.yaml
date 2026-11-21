@@ -3,11 +3,21 @@
 # A scenario is image x data x env x expect.
 #   data    : pre-seeded into the target's chezmoi config (bypasses classification prompts)
 #   env     : injected into the chezmoi init/apply process environment
-#   expect  : declared outcomes, incl. known failures (xfail)
+#   expect  : declared outcomes, incl. known failures (xfail) and
+#             diff_allowlist (grep -E paths exempt from verify's chezmoi diff
+#             check — for files rewritten by tools at runtime)
 #
-# Lint-only for now; `lane` records the eventual lane and
-# is not executed yet. Distro-faithful rendering only happens in the container/VM
-# lanes — host lint renders with the host's .chezmoi.os/osRelease.
+# Cloud images pin url + sha256 (or sha512, which is all Debian publishes);
+# `images pull` verifies the pin and aborts on mismatch. Upstream URL drift is
+# accepted: fix = update the pin here + re-pull. smp/memory are per-image VM
+# sizing (Phase C decision); cloud-baked images add base + bake.packages.
+#
+# `manual-recipe` images have no url/sha and are not built by pull/bake: the
+# disk is installed by hand (see VALIDATION.md), then placed at
+# test/images/golden/<name>.qcow2 and only listed/run by the harness.
+#
+  # `lane` selects execution: container, vm, and windows run their stages via
+  # targets.sh. Host lint renders with the host's .chezmoi.os/osRelease.
 version: 1
 
 defaults:
@@ -25,6 +35,9 @@ defaults:
     fedora:
       os: linux
       default_image: fedora-44
+    cachyos:
+      os: linux
+      default_image: cachyos-minimal
     windows-11:
       os: windows
       default_image: windows-11
@@ -35,34 +48,143 @@ images:
     os: linux
     distro: ubuntu
     lane: vm
-    url: "https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-amd64.img"
-    sha256: ""
+    url: "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
+    sha256: "612b2c0cc1bc413a6cb8c38fd611794caf0f2b436c50013d8b3794db12ad7354"
+    smp: 2
+    memory: 4096
+    disk: 40G
   debian-13:
     type: cloud
     os: linux
     distro: debian
     lane: vm
-    url: ""
-    sha256: ""
+    url: "https://cloud.debian.org/images/cloud/trixie/latest/debian-13-generic-amd64.qcow2"
+    # Debian publishes SHA512SUMS only — hence sha512 instead of sha256.
+    sha512: "a733e7d49442a03e70d03e4eb5aaf3967f3efc69ef70952f9bb10fc1ee2c4876eb95956b5ad2d31350e5fada768feb651352535fb8cd1233f61998a5a7d2e93c"
+    smp: 2
+    memory: 4096
+    disk: 40G
   fedora-44:
     type: cloud
     os: linux
     distro: fedora
     lane: vm
-    url: ""
-    sha256: ""
+    url: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-44-1.7.x86_64.qcow2"
+    sha256: "28680fe5b371a5a82ebf43a31926e086a168e59949d03969c5093e7071f90b7f"
+    smp: 2
+    memory: 4096
+    disk: 40G
+  # GNOME goldens: baked by `images bake <name>` (Decision 8) from the stock
+  # base. 8 GiB so the DE install has headroom during the bake (open decision
+  # resolved: sizing lives per-image in this file).
+  ubuntu-24.04-gnome:
+    type: cloud-baked
+    os: linux
+    distro: ubuntu
+    lane: vm
+    base: ubuntu-24.04
+    smp: 2
+    memory: 8192
+    disk: 40G
+    bake:
+      packages: [ubuntu-desktop-minimal]
+  fedora-44-gnome:
+    type: cloud-baked
+    os: linux
+    distro: fedora
+    lane: vm
+    base: fedora-44
+    smp: 2
+    memory: 8192
+    disk: 40G
+    bake:
+      packages: ["@^workstation-product-environment"]
+  # Manually installed CachyOS golden (Calamares, GRUB, minimal). Not produced
+  # by `images pull`/`bake`: the disk is sealed by hand per
+  # VALIDATION.md. ISO provenance (recorded, not auto-verified):
+  #   cachyos-desktop-linux-260809.iso
+  #   sha256 959f6577f45e25ee9fd8c220fd221b08e4ea79412c7315c0f922dd6d86d5e33c
+  # Harness access is an authorized_keys entry for `provision` baked by hand;
+  # the cloud-init seed is ignored on this image.
+  cachyos-minimal:
+    type: manual-recipe
+    os: linux
+    distro: cachyos
+    lane: vm
+    smp: 2
+    memory: 4096
+    disk: 40G
   windows-11:
     type: windows-baked
     os: windows
     distro: windows-11
     lane: windows
+    smp: 4
+    memory: 8192
+    disk: 96G
+    iso_env: DOTFILES_TEST_WINDOWS_ISO
+    image_name: Windows 11 Pro
+  ubuntu-24.04-container:
+    type: container
+    os: linux
+    distro: ubuntu
+    lane: container
+    dockerfile: test/containers/ubuntu-24.04/Dockerfile
+    tag: dotfiles-test/ubuntu-24.04:latest
+  debian-13-container:
+    type: container
+    os: linux
+    distro: debian
+    lane: container
+    dockerfile: test/containers/debian-13/Dockerfile
+    tag: dotfiles-test/debian-13:latest
+  fedora-44-container:
+    type: container
+    os: linux
+    distro: fedora
+    lane: container
+    dockerfile: test/containers/fedora-44/Dockerfile
+    tag: dotfiles-test/fedora-44:latest
 
 scenarios:
+  ubuntu-24.04-container:
+    image: ubuntu-24.04-container
+    lane: container
+    data: {categories: [development, personal], form_factor: desktop}
+    env: {}
+    expect: {apply_exit: 0}
+
+  debian-13-container:
+    image: debian-13-container
+    lane: container
+    data: {categories: [development, personal], form_factor: desktop}
+    env: {}
+    expect: {apply_exit: 0}
+
+  # Fedora surfaces the wezterm fedora39 pin as a declared xfail (Phase 0).
+  fedora-44-container:
+    image: fedora-44-container
+    lane: container
+    data: {categories: [development, personal], form_factor: desktop}
+    env: {}
+    expect: {apply_exit: 0, known_failures: [wezterm]}
+
+  # Server-form variant exercises the excluded_roles path via form_factor.
+  ubuntu-24.04-container-server:
+    image: ubuntu-24.04-container
+    lane: container
+    data: {categories: [personal], form_factor: server}
+    env: {}
+    expect: {apply_exit: 0}
+
+  # Baseline e2e: full desktop-form run without a desktop environment, so the
+  # gnome/kde/... roles stay out and generic desktop provisioning is the test.
+  # The gnome roles run for real in the -gnome-wayland scenarios below.
   ubuntu-24.04-desktop-dev:
     image: ubuntu-24.04
     lane: vm
     data: {categories: [development, personal], form_factor: desktop}
-    env: {XDG_CURRENT_DESKTOP: GNOME, XDG_SESSION_TYPE: wayland}
+    env: {XDG_CURRENT_DESKTOP: "", XDG_SESSION_TYPE: wayland}
     expect: {apply_exit: 0}
 
   ubuntu-24.04-desktop-work-multimedia:
@@ -93,33 +215,95 @@ scenarios:
     env: {XDG_CURRENT_DESKTOP: cosmic, XDG_SESSION_TYPE: wayland}
     expect: {apply_exit: 0}
 
-  # niri is not derivable from XDG_CURRENT_DESKTOP in .chezmoi.yaml.tmpl today,
-  # so the variant sets the classification explicitly in data.
+  # DE/DS are derived from `env` by rendering .chezmoi.yaml.tmpl, so the
+  # classification in that template is the single source of truth. Set them
+  # explicitly in `data` only to force a classification the environment
+  # cannot produce.
+  ubuntu-24.04-desktop-kde:
+    image: ubuntu-24.04
+    lane: vm
+    data: {categories: [development], form_factor: desktop}
+    env: {XDG_CURRENT_DESKTOP: KDE, XDG_SESSION_TYPE: x11}
+    expect: {apply_exit: 0}
+
   ubuntu-24.04-desktop-niri:
     image: ubuntu-24.04
     lane: vm
-    data: {categories: [development], form_factor: desktop, desktop_environment: niri, display_server: wayland}
-    env: {}
+    data: {categories: [development], form_factor: desktop}
+    env: {XDG_CURRENT_DESKTOP: niri, XDG_SESSION_TYPE: wayland}
     expect: {apply_exit: 0}
 
+  # Baseline e2e like the ubuntu scenario: no desktop environment on the stock
+  # cloud image, so the gnome/kde/... roles stay out (gnome runs for real only
+  # on the baked GNOME goldens below). Running gnome against a desktopless
+  # image is not idempotent: gsettings set cannot persist without a session.
   debian-13-desktop-dev:
     image: debian-13
     lane: vm
     data: {categories: [development], form_factor: desktop}
-    env: {XDG_CURRENT_DESKTOP: GNOME, XDG_SESSION_TYPE: x11}
+    env: {XDG_CURRENT_DESKTOP: "", XDG_SESSION_TYPE: x11}
     expect: {apply_exit: 0}
 
+  # wezterm's fedora39 rpm pin was expected to fail here, but manual testing
+  # on Fedora 44 showed it installing fine — run it as-is, no xfail declared.
+  # nix: false — Fedora cloud images ship SELinux enabled and the Nix
+  # installer refuses to run (NixOS/nix#2374); the repo keeps SELinux
+  # relaxation document-only, so this scenario declares the nix dimension off.
   fedora-44-desktop-dev:
     image: fedora-44
     lane: vm
+    nix: false
     data: {categories: [development], form_factor: desktop}
     env: {}
-    expect: {apply_exit: 0, known_failures: [wezterm]}
+    expect: {apply_exit: 0}
 
-  windows-11-desktop-dev:
+  # GNOME baked goldens: the gnome role runs for real (gsettings/extensions).
+  ubuntu-24.04-gnome-wayland:
+    image: ubuntu-24.04-gnome
+    lane: vm
+    data: {categories: [development, personal], form_factor: desktop}
+    env: {XDG_CURRENT_DESKTOP: GNOME, XDG_SESSION_TYPE: wayland}
+    expect: {apply_exit: 0}
+
+  fedora-44-gnome-wayland:
+    image: fedora-44-gnome
+    lane: vm
+    nix: false
+    data: {categories: [development], form_factor: desktop}
+    env: {XDG_CURRENT_DESKTOP: GNOME, XDG_SESSION_TYPE: wayland}
+    expect: {apply_exit: 0}
+
+  # CachyOS (manual golden, see images.cachyos-minimal). Gaming/Steam and
+  # PrismLauncher are deliberately not in the VM matrix: they are deferred to
+  # manual validation on a real install (VALIDATION.md).
+  cachyos-desktop-dev:
+    image: cachyos-minimal
+    lane: vm
+    data: {categories: [development, personal], form_factor: desktop}
+    env: {XDG_CURRENT_DESKTOP: "", XDG_SESSION_TYPE: wayland}
+    expect: {apply_exit: 0}
+
+  cachyos-server:
+    image: cachyos-minimal
+    lane: vm
+    data: {categories: [personal], form_factor: server}
+    env: {XDG_CURRENT_DESKTOP: "", XDG_SESSION_TYPE: wayland}
+    expect: {apply_exit: 0}
+
+  # Classification-only GNOME scenario on the desktop-less golden: the gnome
+  # play is selected by env, but GNOME is not installed in this golden. See
+  # VALIDATION.md before treating its result as meaningful.
+  cachyos-gnome-wayland:
+    image: cachyos-minimal
+    lane: vm
+    data: {categories: [development, personal], form_factor: desktop}
+    env: {XDG_CURRENT_DESKTOP: GNOME, XDG_SESSION_TYPE: wayland}
+    expect: {apply_exit: 0}
+
+  win11-full:
     image: windows-11
     lane: windows
     nix: false
-    data: {categories: [development, personal], form_factor: desktop}
+    data: {categories: [development, gaming, personal], form_factor: desktop}
     env: {}
     expect: {apply_exit: 0}

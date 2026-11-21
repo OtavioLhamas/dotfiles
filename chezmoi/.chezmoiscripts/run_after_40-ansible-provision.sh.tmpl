@@ -42,7 +42,13 @@ if command -v ${ANSIBLE_PLAYBOOK} &>/dev/null; then
     BECOME_ARGS=(-K)
     EXCLUDE_ARGS=()
 {{- if env "DOTFILES_TEST" }}
-    BECOME_ARGS=(--become-password-file "{{ env "DOTFILES_TEST_BECOME_FILE" | default "/dev/null" }}")
+    # Non-interactive: NOPASSWD sudo needs no become flag at all. Ansible
+    # rejects an empty --become-password-file, so only pass it when the
+    # harness supplied a real password (Windows runas).
+    BECOME_ARGS=()
+{{- if env "DOTFILES_TEST_BECOME_FILE" }}
+    BECOME_ARGS=(--become-password-file "{{ env "DOTFILES_TEST_BECOME_FILE" }}")
+{{- end }}
 {{- end }}
 {{- if env "DOTFILES_TEST_EXCLUDE_ROLES" }}
     EXCLUDE_ARGS=(-e '{"excluded_roles": [{{ env "DOTFILES_TEST_EXCLUDE_ROLES" | splitList "," | join "\", \"" | printf "\"%s\"" }}]}')

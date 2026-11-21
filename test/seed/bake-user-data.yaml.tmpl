@@ -1,0 +1,16 @@
+#cloud-config
+# Bake seed — rendered host-side by test/lib/cloudinit.sh (token substitution).
+# Installs the DE package set from matrix.yaml (bake.packages), then powers
+# off; images bake then promotes the booted disk to a new golden.
+# Token values are pre-indented YAML list items:
+#   PACKAGE_ITEMS -> plain packages ("  - name" lines, apt/dnf)
+#   BAKE_RUNCMD   -> "@..." group/environment specs as dnf runcmd lines with
+#                    chained fallbacks (the exact dnf form is confirmed at the
+#                    first Fedora bake).
+packages:
+@@PACKAGE_ITEMS@@
+runcmd:
+@@BAKE_RUNCMD@@
+  # Poweroff completes the bake. If the install lines above hard-fail without
+  # reaching this line, the bake times out and the serial log shows why.
+  - systemctl poweroff
