@@ -28,6 +28,7 @@ Thumbs.db
 test/logs/
 test/images/golden/
 test/images/windows/build/
+test/images/windows/*.iso
 test/images/*.iso
 test/images/*.qcow2
 test/run/
