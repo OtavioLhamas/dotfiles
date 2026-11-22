@@ -1,0 +1,62 @@
+---
+- name: Check if keymapp is installed
+  ansible.windows.win_stat:
+    path: "{{ keymapp_windows_binary }}"
+  register: keymapp_installed
+
+- name: Download keymapp installer
+  ansible.windows.win_get_url:
+    url: "{{ keymapp_windows_url }}"
+    dest: "{{ keymapp_tmp }}\\keymapp-installer.exe"
+  when: not keymapp_installed.stat.exists
+
+- name: Install keymapp
+  ansible.windows.win_shell: |
+    $ErrorActionPreference = 'Stop'
+
+    $installer = Start-Process -FilePath '{{ keymapp_tmp }}\keymapp-installer.exe' `
+      -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR="{{ keymapp_windows_install_dir }}"' `
+      -PassThru
+
+    $attempts = 0
+    while (-not $installer.HasExited -and $attempts -lt 60) {
+      $wizards = Get-Process | Where-Object {
+        $_.MainWindowTitle -match 'Segurança do Windows|Windows Security' -and $_.MainWindowTitle -ne ''
+      }
+      foreach ($w in $wizards) {
+        $w.CloseMainWindow() | Out-Null
+        Start-Sleep -Milliseconds 500
+        if (-not $w.HasExited) { $w | Stop-Process -Force }
+      }
+      Start-Sleep -Seconds 2
+      $attempts++
+    }
+
+    if (-not $installer.HasExited) {
+      $installer.Kill()
+      Throw "Keymapp installer timed out after 2 minutes"
+    }
+
+    if ($installer.ExitCode -ne 0) {
+      Throw "Keymapp installer failed with exit code $($installer.ExitCode)"
+    }
+
+    Write-Output "Keymapp installed successfully"
+  when: not keymapp_installed.stat.exists
+
+- name: Pre-stage ZSA USB driver
+  ansible.windows.win_shell: |
+    $infPath = '{{ keymapp_windows_install_dir }}\STM32Bootloader.inf'
+    if (Test-Path $infPath) {
+      pnputil /add-driver $infPath /install
+      Write-Output "Driver pre-staged: $infPath"
+    } else {
+      Write-Output "STM32Bootloader.inf not found, skipping"
+    }
+  when: not keymapp_installed.stat.exists
+
+- name: Clean up installer
+  ansible.windows.win_file:
+    path: "{{ keymapp_tmp }}\\keymapp-installer.exe"
+    state: absent
+  when: not keymapp_installed.stat.exists

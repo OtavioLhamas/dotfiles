@@ -1,0 +1,5 @@
+---
+- name: reload keymapp udev rules
+  ansible.builtin.command:
+    cmd: udevadm control --reload-rules
+  become: true

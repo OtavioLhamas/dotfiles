@@ -1,17 +1,8 @@
 ---
 linux_roles:
-  - flatpak
   - geerlingguy.docker
-  - zsh
-  - kitty
-  - rsync
-  - obsidian
-  - wezterm
-  - vivaldi
   - bitwarden
-  - deskflow
+  - keymapp
 
 become_roles:
   - geerlingguy.docker
-  - flatpak
-  - zsh

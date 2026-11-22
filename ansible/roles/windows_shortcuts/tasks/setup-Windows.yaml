@@ -1,0 +1,60 @@
+---
+- name: Build managed shortcut destination list
+  ansible.builtin.set_fact:
+    _windows_shortcuts_managed_dests: >-
+      {{ _windows_shortcuts_managed_dests | default([])
+      + [shortcut.dest | default(windows_shortcuts_desktop_path + '\\' + shortcut.name + '.lnk')] }}
+  loop: "{{ windows_shortcuts_managed }}"
+  loop_control:
+    loop_var: shortcut
+  when: windows_shortcuts_purge | bool
+
+- name: Check source files exist for managed shortcuts
+  ansible.windows.win_stat:
+    path: "{{ shortcut.src }}"
+  loop: "{{ windows_shortcuts_managed }}"
+  loop_control:
+    loop_var: shortcut
+  register: _windows_shortcuts_src_stat
+  when: windows_shortcuts_managed | length > 0
+
+- name: Ensure managed shortcuts are present
+  community.windows.win_shortcut:
+    src: "{{ shortcut.src }}"
+    dest: >-
+      {{ shortcut.dest | default(windows_shortcuts_desktop_path + '\\' + shortcut.name + '.lnk') }}
+    arguments: "{{ shortcut.arguments | default(omit) }}"
+    description: "{{ shortcut.description | default(omit) }}"
+    directory: "{{ shortcut.directory | default(omit) }}"
+    hotkey: "{{ shortcut.hotkey | default(omit) }}"
+    icon: "{{ shortcut.icon | default(omit) }}"
+    windowstyle: "{{ shortcut.windowstyle | default(omit) }}"
+    state: present
+  loop: "{{ windows_shortcuts_managed }}"
+  loop_control:
+    loop_var: shortcut
+    index_var: idx
+  when:
+    - windows_shortcuts_managed | length > 0
+    - _windows_shortcuts_src_stat.results[idx].stat.exists
+
+- name: Find existing desktop shortcuts
+  ansible.windows.win_find:
+    paths:
+      - "{{ windows_shortcuts_desktop_path }}"
+    patterns:
+      - "*.lnk"
+    file_type: file
+  register: _windows_shortcuts_found_files
+  when: windows_shortcuts_purge | bool
+
+- name: Remove unmanaged desktop shortcuts
+  community.windows.win_shortcut:
+    dest: "{{ file.path }}"
+    state: absent
+  loop: "{{ _windows_shortcuts_found_files.files }}"
+  loop_control:
+    loop_var: file
+  when:
+    - windows_shortcuts_purge | bool
+    - file.path not in (_windows_shortcuts_managed_dests | default([]))

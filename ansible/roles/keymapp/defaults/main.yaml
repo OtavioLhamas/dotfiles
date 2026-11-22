@@ -1,0 +1,5 @@
+---
+keymapp_windows_url: "https://oryx.nyc3.cdn.digitaloceanspaces.com/keymapp/keymapp-latest.exe"
+keymapp_tmp: "C:\\Windows\\Temp"
+keymapp_windows_install_dir: "C:\\Program Files (x86)\\Keymapp" # Default install path is "C:\Program Files (x86)\Keymapp"
+keymapp_windows_binary: "{{ keymapp_windows_install_dir }}\\keymapp.exe"

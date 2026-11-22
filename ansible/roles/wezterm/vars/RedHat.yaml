@@ -1,2 +1,7 @@
 ---
+# NOTE: this RPM pin is x86_64-only (upstream publishes a separate aarch64 RPM
+# per release; this pin predates that). Kept as-is until wezterm migrates to
+# Nix/Home Manager per plans/nix/phase-2 (Nix is arch-aware via `system`).
+# setup-RedHat.yaml fails fast on non-x86_64 so ARM machines get a clear
+# pointer instead of a confusing dnf 404/arch mismatch.
 wezterm_rpm_url: https://github.com/wezterm/wezterm/releases/download/20240203-110809-5046fc22/wezterm-20240203_110809_5046fc22-1.fedora39.x86_64.rpm

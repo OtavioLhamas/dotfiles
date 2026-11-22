@@ -1,13 +1,8 @@
 ---
 excluded_roles:
   - discord
-  - flatpak
   - spotify
   - stremio
-  - obsidian
-  - wezterm
-  - steam
-  - kitty
-  - vivaldi
+  - prismlauncher
   - bitwarden
-  - deskflow
+  - keymapp

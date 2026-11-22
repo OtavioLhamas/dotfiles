@@ -8,3 +8,10 @@
   loop: "{{ flatpak_remotes }}"
   loop_control:
     loop_var: remote
+  become: "{{ remote.method | default('system') == 'system' }}"
+  register: flatpak_remote_result
+  # The system helper is D-Bus activated; its first cold start can exceed the
+  # 25s activation timeout under load, so retry rather than fail the run.
+  retries: 5
+  delay: 5
+  until: flatpak_remote_result is succeeded

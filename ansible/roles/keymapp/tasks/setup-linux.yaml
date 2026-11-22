@@ -1,0 +1,28 @@
+---
+- name: Ensure plugdev group exists
+  ansible.builtin.group:
+    name: plugdev
+    state: present
+  become: true
+
+- name: Add user to plugdev group
+  ansible.builtin.user:
+    name: "{{ ansible_facts['env']['USER'] }}"
+    groups: plugdev
+    append: true
+  become: true
+
+- name: Ensure udev rules directory exists
+  ansible.builtin.file:
+    path: /etc/udev/rules.d
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Deploy udev rules
+  ansible.builtin.template:
+    src: 50-zsa.rules.j2
+    dest: /etc/udev/rules.d/50-zsa.rules
+    mode: "0644"
+  become: true
+  notify: reload keymapp udev rules

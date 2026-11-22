@@ -1,15 +1,15 @@
 # Ansible
 
-System-wide configuration and provisioning. Ansible applies roles to the local machine (and optionally a Windows host over SSH) for multi-step installations requiring repository setup, GPG keys, flatpaks, services, or post-install handlers.
+System-wide configuration and provisioning. Ansible applies roles to the local machine (and optionally a Windows host over SSH) for multi-step installations requiring repository setup, GPG keys, services, or post-install handlers. It also manages GUI applications selected for Flatpak and is the narrow user-space fallback for software only available through a manual binary/installer download. Package-source priority and freshness criteria are project-wide; see `AGENTS.md`.
 
 Like the rest of the project, this is **provisioning**, not declarative management: roles install and configure declared settings but never uninstall packages, revert settings, or converge the system back to the declared state.
 
-Simple single-package `apt/dnf install` from default repos should go in `.chezmoidata/packages.yaml` instead (Phase 3a) — not an Ansible role.
+Simple system-package installs from the distro's default repositories belong in `.chezmoidata/packages.yaml` (Phase 3a), not an Ansible role. This applies to the distro's native manager (apt, dnf, pacman, or the Windows-specific mechanism); Ansible is for multi-step setup/configuration and the explicitly defined fallbacks. User-level CLI tools and GUI apps that were Ansible roles now route to Home Manager `home.packages` (Phase 2, see `nix/CONTEXT.md`); Ansible keeps Flatpak GUI apps, system services, and retained system-level remnants (e.g. Keymapp USB/udev).
 
 ## Language
 
 **Role**:
-A single-responsibility unit of system configuration. Each role handles one concern requiring multi-step setup (e.g., `fish` installs + sets default shell, `flatpak` installs + adds Flathub remote, `gnome` configures desktop extensions).
+A single-responsibility unit of system configuration. Each role handles one concern requiring multi-step setup (e.g., `flatpak` installs the system package and adds Flathub only when a Flatpak app depends on it, `geerlingguy.docker` configures the Docker service, `keymapp` configures USB/udev access, `gnome` configures desktop extensions).
 _Avoid_: Task, playbook, recipe
 
 **Play**:

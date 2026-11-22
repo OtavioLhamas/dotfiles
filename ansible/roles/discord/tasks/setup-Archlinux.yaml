@@ -1,0 +1,7 @@
+---
+- name: Install Discord via Flatpak
+  community.general.flatpak:
+    name: com.discordapp.Discord
+    state: present
+    method: system
+  become: true

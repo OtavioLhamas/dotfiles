@@ -1,4 +1,9 @@
 ---
+- name: Fail on unsupported architecture (wezterm RPM pin is x86_64-only)
+  ansible.builtin.fail:
+    msg: "wezterm role pins an x86_64 Fedora RPM; {{ ansible_architecture }} is unsupported. Migrate wezterm to Nix (plans/nix/phase-2) or add an aarch64 RPM URL."
+  when: ansible_architecture not in ["x86_64", "amd64"]
+
 - name: Install wezterm
   ansible.builtin.dnf:
     name: "{{ wezterm_rpm_url }}"

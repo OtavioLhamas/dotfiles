@@ -1,0 +1,10 @@
+---
+windows_shortcuts_managed:
+  - name: Vivaldi
+    src: "{{ ansible_facts['env']['LOCALAPPDATA'] }}\\Vivaldi\\Aplicaiton\\vivaldi.exe"
+# WARNING: no reverting is implemented — when enabled, any .lnk shortcut on the
+# desktop that is NOT listed in windows_shortcuts_managed will be permanently
+# deleted (not sent to the Recycle Bin). Set to false if you have custom
+# desktop shortcuts you want to keep.
+windows_shortcuts_purge: true
+windows_shortcuts_desktop_path: "{{ ansible_facts['env']['USERPROFILE'] }}\\Desktop"

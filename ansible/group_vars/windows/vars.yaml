@@ -4,4 +4,9 @@ windows_roles:
   - windows_capability
   - windows_consumer
   - windows_feature
+  - windows_shortcuts
+  - windows_startmenu
+  - windows_taskbar
   - hibernation
+  - keymapp
+  - nerdfonts
