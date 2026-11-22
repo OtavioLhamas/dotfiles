@@ -1,6 +1,6 @@
 #!/bin/bash
 # Installs prerequisites needed before chezmoi can fully operate
-# Runs during hooks.read-source-state.pre (NOT a template)
+# Runs during hooks.read-source-state.pre (CAN'T be a template)
 
 set -euo pipefail
 
@@ -8,13 +8,74 @@ set -euo pipefail
 SOURCE_DIR="${CHEZMOI_SOURCE_DIR:-$(cd -P "$(dirname "$0")/.." && pwd -P)}"
 REQUIREMENTS_FILE="$SOURCE_DIR/.chezmoidata/requirements.yaml"
 
-# --- Install yq if missing ---
-# yq is needed to parse requirements.yaml below, so install it first.
-# The Debian/Ubuntu apt version is outdated, so we always pull from GitHub.
-if ! command -v yq &>/dev/null; then
-    echo "Installing yq binary..."
-    sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
-    sudo chmod +x /usr/local/bin/yq
+# Non-interactive when running under the test harness, prompting otherwise.
+if [[ "${DOTFILES_TEST:-}" == "1" ]]; then
+    apt_yes="-y"
+    dnf_yes="-y"
+    pacman_yes="--noconfirm"
+    export DEBIAN_FRONTEND=noninteractive
+else
+    apt_yes=""
+    dnf_yes=""
+    pacman_yes=""
+fi
+
+# --- Bootstrap substrate ---
+# Cloud test images vary in which downloader is preinstalled. The hook needs one
+# before it can read requirements.yaml, so resolve curl or wget here
+# (requirements.yaml declares the rest for machines provisioned outside an test image).
+ensure_cmd() {
+    local cmd="$1" pkg="${2:-$1}"
+    command -v "$cmd" &>/dev/null && return 0
+    echo "Installing $pkg (needed to bootstrap)..."
+    if command -v apt-get &>/dev/null; then
+        sudo apt-get update -qq && sudo apt-get install $apt_yes "$pkg"
+    elif command -v dnf &>/dev/null; then
+        sudo dnf install $dnf_yes "$pkg"
+    elif command -v pacman &>/dev/null; then
+        sudo pacman -Syu --needed $pacman_yes "$pkg"
+    else
+        echo "cannot install $pkg: no known package manager" >&2
+        return 1
+    fi
+}
+
+download() { # download <url> <dest>
+    local url="$1" dest="$2"
+    if command -v curl &>/dev/null; then
+        curl -fsSL "$url" -o "$dest"
+    elif command -v wget &>/dev/null; then
+        wget -qO "$dest" "$url"
+    else
+        ensure_cmd curl
+        curl -fsSL "$url" -o "$dest"
+    fi
+}
+
+# --- Resolve yq for bootstrap parsing ---
+# If it is not available yet, download and use a temporary
+# yq binary and remove it on every exit.
+# mise installs the persistent yq after this pre-source hook. 
+if command -v yq &>/dev/null; then
+    YQ_BIN="$(command -v yq)"
+else
+    YQ_TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/chezmoi-yq.XXXXXX")"
+    trap 'rm -rf -- "$YQ_TMP_DIR"' EXIT
+    YQ_BIN="$YQ_TMP_DIR/yq"
+    echo "Downloading temporary yq binary for bootstrap parsing..."
+    yq_arch=""
+    case "$(uname -m)" in
+        x86_64 | amd64) yq_arch="amd64" ;;
+        aarch64 | arm64) yq_arch="arm64" ;;
+        armv7* | armv6* | armv8l) yq_arch="arm" ;;
+        i386 | i686) yq_arch="386" ;;
+        *)
+            echo "unsupported architecture '$(uname -m)' for temporary yq download" >&2
+            exit 1
+            ;;
+    esac
+    download "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${yq_arch}" "$YQ_BIN"
+    chmod 0755 "$YQ_BIN"
 fi
 
 # --- Detect OS ---
@@ -25,74 +86,60 @@ if [ -f /etc/os-release ]; then
 fi
 
 if [ -f "$REQUIREMENTS_FILE" ]; then
-    # Read common packages for all Linux distros
-    common_packages=$(yq '.linux.common[]' "$REQUIREMENTS_FILE" 2>/dev/null)
+    # Use process substitution to run yq in the background and
+    # feed the output line by line into mapfile 
+    mapfile -t toolchain_packages < <(
+        DISTRO="$DISTRO" "$YQ_BIN" -r \
+            '((.linux.common // []) + (.linux[strenv(DISTRO)] // [])) | .[] | select(. != "")' \
+            "$REQUIREMENTS_FILE" 2>/dev/null
+    )
 
-    # Read distro-specific packages
-    distro_packages=$(yq ".linux.${DISTRO}[]" "$REQUIREMENTS_FILE" 2>/dev/null)
-
-    toolchain_packages=()
-    if [ -n "$common_packages" ] && [ "$common_packages" != "null" ]; then
-        while IFS= read -r pkg; do
-            [ -n "$pkg" ] && toolchain_packages+=("$pkg")
-        done <<< "$common_packages"
-    fi
-    if [ -n "$distro_packages" ] && [ "$distro_packages" != "null" ]; then
-        while IFS= read -r pkg; do
-            [ -n "$pkg" ] && toolchain_packages+=("$pkg")
-        done <<< "$distro_packages"
-    fi
+    # List the installed packages
+    case "$DISTRO" in
+        arch | cachyos)
+            installed=$(pacman -Qq 2>/dev/null)
+            ;;
+        ubuntu | debian | pop)
+            # Status-Abbrev is "ii " for installed packages; awk compares the second field.
+            installed=$(dpkg-query -W -f='${Package} ${db:Status-Abbrev}\n' 2>/dev/null \
+                | awk '$2 == "ii" { print $1 }')
+            ;;
+        fedora)
+            installed=$(rpm -qa --qf '%{NAME}\n' 2>/dev/null)
+            ;;
+        *)
+            echo "Unsupported distro: $DISTRO" >&2
+            installed=""
+            ;;
+    esac
 
     toolchain_missing=()
     for package in "${toolchain_packages[@]}"; do
-        if ! dpkg -l "$package" 2>/dev/null | grep -q '^ii' && ! rpm -q "$package" &>/dev/null 2>&1; then
-            toolchain_missing+=("${package}")
-        fi
+        grep -qx -- "$package" <<< "$installed" || toolchain_missing+=("$package")
     done
 
     # --- Install missing packages if any ---
     if [ ${#toolchain_missing[@]} -gt 0 ]; then
+        echo "Installing toolchain packages: ${toolchain_missing[*]}"
+
         case "$DISTRO" in
         ubuntu | debian | pop)
-            sudo apt-get update -qq
-            install_cmd="sudo DEBIAN_FRONTEND=noninteractive apt-get install -y"
+            sudo apt-get update -qq || { echo "apt-get update failed" >&2; return 1; }
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install $apt_yes "${toolchain_missing[@]}" \
+                || { echo "apt-get install failed" >&2; return 1; }
             ;;
         fedora)
-            install_cmd="sudo dnf install -y"
+            sudo dnf install $dnf_yes "${toolchain_missing[@]}" \
+                || { echo "dnf install failed" >&2; return 1; }
+            ;;
+        arch | cachyos)
+            sudo pacman -Syu --needed $pacman_yes "${toolchain_missing[@]}" \
+                || { echo "pacman install failed" >&2; return 1; }
+            ;;
+        *)
+            echo "Unknown/unsupported distro '$DISTRO'. Cannot install toolchain packages." >&2
+            return 1
             ;;
         esac
-
-        echo "Installing toolchain packages: ${toolchain_missing[*]}"
-        $install_cmd "${toolchain_missing[@]}"
-    fi
-fi
-
-# --- Install Bitwarden CLI if missing ---
-if ! command -v bw &>/dev/null; then
-    echo "Installing Bitwarden CLI (bw)..."
-
-    # Fetch the latest CLI release number
-    BW_VERSION=$(curl -s https://api.github.com/repos/bitwarden/clients/releases | grep -o '"tag_name": "cli-v[^"]*' | grep -o '[0-9.]*' | head -n 1)
-
-    if [ -z "$BW_VERSION" ]; then
-        BW_VERSION="2026.4.1" # fallback
-    fi
-
-    BW_URL="https://github.com/bitwarden/clients/releases/download/cli-v${BW_VERSION}/bw-linux-${BW_VERSION}.zip"
-
-    TEMP_DIR=$(mktemp -d)
-    curl -sL "$BW_URL" -o "$TEMP_DIR/bw.zip"
-    unzip -q "$TEMP_DIR/bw.zip" -d "$TEMP_DIR"
-    sudo mv "$TEMP_DIR/bw" /usr/local/bin/bw
-    sudo chmod +x /usr/local/bin/bw
-    rm -rf "$TEMP_DIR"
-fi
-
-# --- Prompt for Bitwarden login if needed ---
-if command -v bw &>/dev/null; then
-    BW_STATUS=$(bw status 2>/dev/null | yq '.status // "unauthenticated"')
-
-    if [ "$BW_STATUS" = "unauthenticated" ]; then
-        bw login
     fi
 fi

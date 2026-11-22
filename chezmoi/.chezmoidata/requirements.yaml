@@ -1,20 +1,37 @@
 # Phase 1 — machine-wide native toolchains and dev libraries
 # Read by .ensure-pre-requisites.sh hook via yq.
 # These must be present before mise compiles language runtimes and native tools.
+#
+# `common` also carries the bootstrap substrate: the hook needs a downloader
+# to read this file, so declaring it here keeps one source of truth for
+# machines provisioned outside the image (bare metal, VMs).
+# Requirements include the system Python Ansible uses on distros whose base
+# install does not guarantee it. Debian variants also need `python3-debian` for
+# `deb822_repository`; that module is only used by Debian-specific tasks.
 linux:
   common:
     - gcc
     - curl
     - wget
     - git
-  pop:
-    - build-essential
-    - libreadline-dev
   ubuntu:
     - build-essential
     - libreadline-dev
   debian:
     - build-essential
     - libreadline-dev
+  pop:
+    - build-essential
+    - libreadline-dev
+    - python3
+    - python3-debian
   fedora:
     - readline-devel
+  arch:
+    - base-devel
+    - readline
+    - python
+  cachyos:
+    - base-devel
+    - readline
+    - python

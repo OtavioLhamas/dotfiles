@@ -93,6 +93,8 @@ if ($SkipInit) {
     exit 0
 }
 
+# pwsh is installed here, deliberately: chezomi ps1 interpreter is pwsh
+# (.chezmoi.yaml.tmpl), so on a fresh pwsh-less machine chezmoi cannot run
 if (-not (Get-Command pwsh -ErrorAction SilentlyContinue)) {
     Write-Host "Installing pwsh..."
     winget install --id Microsoft.PowerShell --accept-source-agreements --accept-package-agreements --silent
