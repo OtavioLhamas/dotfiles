@@ -1,7 +1,6 @@
 ---
 linux_roles:
   - flatpak
-  - flameshot
   - geerlingguy.docker
   - zsh
   - kitty

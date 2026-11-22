@@ -1,7 +1,6 @@
 ---
 excluded_roles:
   - discord
-  - flameshot
   - flatpak
   - spotify
   - stremio
@@ -12,4 +11,3 @@ excluded_roles:
   - vivaldi
   - bitwarden
   - deskflow
-  - sigma_file_manager

@@ -1,3 +1,0 @@
----
-- name: Run shared linux setup
-  ansible.builtin.include_tasks: setup-linux.yaml
