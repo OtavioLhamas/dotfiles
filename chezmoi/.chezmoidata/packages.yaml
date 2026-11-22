@@ -1,112 +1,186 @@
-# Simple apt/dnf install packages from default distro repos.
+# System-package declarations — one flat list per OS with gating tags.
+# Simple installs from default distro repos.
 # For anything requiring repo setup, GPG keys, or multi-step install — use Ansible.
 #
-# Structure:
-#   .packages.common          — all machines
-#   .packages.linux.common    — all linux distros
-#   .packages.linux.<distro>  — specific distro (pop, ubuntu, debian, fedora)
-#   .packages.windows         — all windows
-#   .packages.categories.<cat>.common / .linux.common / .linux.<distro>
-#   .packages.form_factors.<factor>.common / .linux.common / .linux.<distro>
-#   .packages.desktop_environments.<de>.common / .linux.common / .linux.<distro>
+# Every field is optional except name;
+# an omitted tag means "no constraint" (renders on every matching machine):
+#   name                  : package name (linux) / resource instance name (windows)
+#   id                    : winget package identifier (windows only)
+#   categories            : [cat, ...] — renders when the machine declares ANY of them
+#   distros               : [distro, ...] — linux only; renders on these distros
+#   form_factors          : [factor, ...]
+#   desktop_environments  : [de, ...]
 #
-# Keys can be omitted entirely — the template handles missing/empty safely.
+# Windows-only installer fields (shape drives the wrapper the template renders):
+#   scope    : winget --scope
+#   location : winget --location (raw PowerShell path expression, quoted as
+#              PowerShell wants); combined with `sentinel` for path-pinned
+#              wrapper with drift detection; without them the default-path
+#              wrapper is used (winget-list installed-check)
+#   sentinel : file expected under location (subpaths allowed, e.g. bin\app.exe)
+#   console  : <reason> — installer whose manifest forbids admin contexts
+#              (elevationProhibited); winget refuses ANY elevated token, so
+#              the wrapper DELEGATES to a one-shot scheduled task running
+#              unelevated in the console session (Interactive logon type,
+#              Limited run level). Rendered LAST. Requires an active console
+#              session for the current user.
 
 packages:
-  common:
   linux:
-    common:
-      - htop
-      - qbittorrent
-    pop:
-    ubuntu:
-    debian:
-    fedora:
+    - name: flameshot
+      form_factors: [desktop, laptop]
+      categories: [personal]
+
+  # Order respected on template render. Console-delegated entries render
+  # LAST regardless of position here — the template makes a second pass
+  # for them because `dsc config set` aborts at the first failing resource.
   windows:
 
-  categories:
-    gaming:
-      common:
-      linux:
-        common:
-        pop:
-        fedora:
+    # scope   : supported;      default: machine
+    # location: not supported;  default: C:\Program Files\Git
+    - name: Git
+      id: Git.Git
 
-    development:
-      common:
-      linux:
-        common:
-        pop:
-        fedora:
+    # scope   : supported;      default: machine
+    # location: supported;      default: %LOCALAPPDATA%\Programs\Lua
+    # sentinel: bin\lua.exe
+    - name: Lua
+      id: DEVCOM.Lua
 
-    work:
-      common:
-      linux:
-        common:
-        pop:
-        fedora:
+    # scope   : supported;      default: machine
+    # location: not supported;  default: C:\Program Files\Deskflow
+    - name: Deskflow
+      id: Deskflow.Deskflow
 
-    multimedia:
-      common:
-      linux:
-        common:
-        pop:
-        fedora:
+    # scope   : not supported;  default: machine
+    # location: not supported;  default: %LOCALAPPDATA%\Discord
+    - name: Discord
+      id: Discord.Discord
 
-    personal:
-      common:
-      linux:
-        common:
-        pop:
-        fedora:
+    # scope   : supported;      default: user
+    # location: not supported;  default: %LOCALAPPDATA%\PowerToys
+    - name: PowerToys
+      id: Microsoft.PowerToys
 
-  form_factors:
-    laptop:
-      common:
-      linux:
-        common:
-        pop:
-        fedora:
+    - name: WindowsTerminal
+      id: Microsoft.WindowsTerminal
 
-    desktop:
-      common:
-      linux:
-        common:
-        pop:
-        fedora:
+    # scope   : not supported;  default: machine
+    # location: supported;      default: C:\Program Files\7-Zip
+    # sentinel: 7zFM.exe
+    - name: 7-Zip
+      id: 7zip.7zip
 
-    server:
-      common:
-      linux:
-        common:
-        pop:
-        fedora:
+    # scope   : supported;      default: machine
+    # location: supported;      default: C:\Program Files\Notepad++
+    # sentinel: notepad++.exe
+    - name: Notepad++
+      id: Notepad++.Notepad++
 
-  desktop_environments:
-    gnome:
-      common:
-      linux:
-        common:
-        pop:
-        fedora:
+    # scope   : not supported;  default: machine
+    # location: supported;      default: C:\Program Files\Flameshot
+    # sentinel: bin\flameshot.exe
+    - name: Flameshot
+      id: Flameshot.Flameshot
 
-    kde:
-      common:
-      linux:
-        common:
-        pop:
-        fedora:
+    # --- personal ---
+    # scope   : not supported;  default: machine
+    # location: supported;      default: C:\Program Files\Mozilla Firefox
+    # sentinel: firefox.exe
+    - name: Firefox
+      id: Mozilla.Firefox
+      categories: [personal]
 
-    cosmic:
-      common:
-      linux:
-        common:
-        pop:
-        fedora:
+    # scope   : supported;      default: user
+    # location: supported;      default: %LOCALAPPDATA%\Programs\Obsidian
+    # sentinel: Obsidian.exe
+    # WARN: Avoid using custom location.
+    #       The auto-update runs unelevated as the interactive user.
+    - name: Obsidian
+      id: Obsidian.Obsidian
+      categories: [personal]
 
-    none:
-      common:
-      linux:
-        common:
-        pop:
-        fedora:
+    # scope   : supported;      default: user
+    # location: supported;      default: %LOCALAPPDATA%\Vivaldi\Application
+    # sentinel: Application\vivaldi.exe
+    # WARN: Avoid using custom location.
+    #       Versioned extraction dir makes it impossible to pin a sentinel file,
+    #       and the auto-update runs unelevated as the interactive user.
+    - name: Vivaldi
+      id: Vivaldi.Vivaldi
+      categories: [personal]
+
+    # scope   : supported;      default: user
+    # location: supported;      default: %LOCALAPPDATA%\SumatraPDF
+    # sentinel: SumatraPDF.exe
+    # WARN: Avoid using custom location.
+    #       The auto-update runs unelevated as the interactive user.
+    - name: SumatraPDF
+      id: SumatraPDF.SumatraPDF
+      categories: [personal]
+      scope: user
+      location: "\"C:\\Tools\\SumatraPDF\""
+      sentinel: SumatraPDF.exe
+
+    # scope   : not supported;  default: machine
+    # location: supported;      default: C:\Program Files\qBittorrent
+    # sentinel: qbittorrent.exe
+    - name: qBittorrent
+      id: qBittorrent.qBittorrent
+      categories: [personal]
+      location: "'C:\\Tools\\qBittorrent'"
+      sentinel: qbittorrent.exe
+
+    - name: Bitwarden
+      id: Bitwarden.Bitwarden
+      categories: [personal]
+
+    # --- multimedia ---
+    # scope   : not supported;  default: user
+    # location: supported;      default: %LOCALAPPDATA%\Programs\LNV\Stremio-4
+    # sentinel: stremio.exe
+    - name: Stremio
+      id: Stremio.Stremio
+      categories: [multimedia]
+
+    # --- development ---
+    # scope   : not supported;  default: machine
+    # location: supported;      default: C:\Program Files\WezTerm
+    # sentinel: wezterm-gui.exe
+    - name: WezTerm
+      id: wez.wezterm
+      categories: [development]
+
+    # scope   : supported;      default: user
+    # location: supported;      default: %LOCALAPPDATA%\Microsoft\WinGet\Packages\cURL.cURL_Microsoft.Winget.Source_8wekyb3d8bbwe
+    # WARN: Avoid using custom location.
+    #       Versioned extraction dir makes it impossible to pin a sentinel file. 
+    - name: cURL
+      id: cURL.cURL
+      categories: [development]
+
+    - name: VS Community
+      id: Microsoft.VisualStudio.Community
+      categories: [development]
+
+    # --- gaming ---
+    # scope   : not supported;  default: machine
+    # location: supported;      default: C:\Program Files (x86)\Steam
+    # sentinel: Steam.exe
+    - name: Steam
+      id: Valve.Steam
+      categories: [gaming]
+
+    # scope   : not supported;  default: user
+    # location: supported;      default: %LOCALAPPDATA%\Programs\PrismLauncher
+    # sentinel: prismlauncher.exe
+    - name: PrismLauncher
+      id: PrismLauncher.PrismLauncher
+      categories: [gaming]
+
+    # --- console-delegated: rendered LAST (second pass) ---
+    # Spotify — manifest is elevationProhibited: winget refuses ANY admin context.
+    # Delegates to a scheduled task running unelevated in the console session.
+    - name: Spotify
+      id: Spotify.Spotify
+      console: winget manifest is elevationProhibited, refuses any admin context; installs unelevated via the console session

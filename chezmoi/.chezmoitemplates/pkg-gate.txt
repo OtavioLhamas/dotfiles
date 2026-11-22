@@ -1,0 +1,32 @@
+{{- /* pkg-gate: renders "1" when a package entry passes every declared gate
+       for the machine; omitted tags are wildcards (render everywhere).
+
+       Expects: dict "entry" <package entry> "machine" <dict>.
+       Machine dict fields:
+         categories (list);
+         distro, form_factor, desktop_environment (scalars);
+       List-vs-list tags (categories) match on ANY overlap;
+       scalar-vs-list tags (distros, form_factors, desktop_environments)
+       match when the machine's value is a member.
+       All lookups are index-based: machine dicts may omit fields they don't
+       gate on, and entries may omit any tag.
+
+       One entry = one render; multi-category packages are a single entry with a list.
+    */ -}}
+{{- $ok := true -}}
+{{- with index .entry "categories" -}}
+{{-   $ok = false -}}
+{{-   range . -}}
+{{-     if has . (index $.machine "categories") -}}{{- $ok = true -}}{{- end -}}
+{{-   end -}}
+{{- end -}}
+{{- with index .entry "distros" -}}
+{{-   if not (has (index $.machine "distro") .) -}}{{- $ok = false -}}{{- end -}}
+{{- end -}}
+{{- with index .entry "form_factors" -}}
+{{-   if not (has (index $.machine "form_factor") .) -}}{{- $ok = false -}}{{- end -}}
+{{- end -}}
+{{- with index .entry "desktop_environments" -}}
+{{-   if not (has (index $.machine "desktop_environment") .) -}}{{- $ok = false -}}{{- end -}}
+{{- end -}}
+{{- if $ok -}}1{{- end -}}

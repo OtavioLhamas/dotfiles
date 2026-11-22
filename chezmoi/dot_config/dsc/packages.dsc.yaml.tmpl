@@ -1,0 +1,166 @@
+# yaml-language-server: $schema=https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+# Winget packages — direct PowerShell DSC v3 config document (Windows 11 native).
+# See: https://learn.microsoft.com/en-us/powershell/dsc
+# Applied by run_onchange_after_25-dsc-configure.ps1.tmpl via `dsc config set`.
+# Migrated from the winget.dsc.yaml WinGet-Configuration wrapper in
+# plans/dsc/phase-2-package-migration.md (decision 28: flat tag-based data).
+#
+# This file stays a chezmoi template; chezmoi deploys the rendered document to
+# ~/.config/dsc/packages.dsc.yaml.
+#
+# Data: EVERY package lives in .chezmoidata/packages.yaml `windows` (one flat
+# list, entry fields drive the wrapper shape; gating via the shared pkg-gate
+# snippet — categories/distros/form_factors/desktop_environments tags, omitted
+# = all machines). The template makes TWO passes over the same list:
+#   - Pass 1 (render order = list order): regular wrappers. Entry shape picks
+#     the body: `location` + `sentinel` → path-pinned wrapper (explicit
+#     --scope/--location, sentinel-file drift detection); otherwise →
+#     default-path wrapper (winget-list installed-check, optional --scope).
+#   - Pass 2 (LAST): `console: <reason>` entries — installers whose manifest
+#     forbids admin contexts (elevationProhibited): the wrapper delegates to
+#     a one-shot scheduled task running unelevated in the console session
+#     (Interactive logon type, Limited run level). Requires an active
+#     console session for the current user (lane golden: autologon; real
+#     machines: the logged-on user). Console entries render last because
+#     `dsc config set` aborts at the first failing resource, so a failed
+#     delegation can never block the rest of the document.
+# All wrappers drive the winget CLI directly (decision 17: the native
+# Microsoft.WinGet/Package resource path failed in-document for packages that
+# install fine via direct CLI from the same token, and hid winget's output).
+#
+# DSC resource contracts (VM-proven 2026-11-13, DSC 3.2.3.0):
+#   - testScript: the boolean WRITTEN TO OUTPUT is the verdict
+#     (`return [bool](...)` / `return ($LASTEXITCODE -eq 0)`); a bare exit code
+#     yields "did not return a single boolean value" errors.
+#   - setScript: ONLY error records (Write-Error) fail the resource; a bare
+#     `exit 1` is judged success (`dsc config set` exits 0, hadErrors=False).
+#     Every failure path must Write-Error.
+#   - Set runs test first: test-true skips set silently (no "Set" progress
+#     line) — that is the install-once mechanism, not a bug.
+#
+# PowerShell is intentionally NOT declared anywhere: winget resolves
+# Microsoft.PowerShell to its Store MSIX package. pwsh is an interpreter
+# prerequisite, not a package: bootstrap.ps1 (load-bearing — the ps1
+# interpreter is pwsh, so a pwsh-less machine cannot even run the hook;
+# VM-proven 2026-11-13) and .ensure-pre-requisites.ps1 install it from the
+# official zip.
+#
+# BuildTools is NOT here — hook-managed (vswhere guard), see the Phase 2 plan.
+
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+
+{{- $machine := dict "categories" $.categories }}
+{{- /* Pass 1: regular wrappers, in list order. */ -}}
+{{- range $pkg := .packages.windows }}
+{{-   if not (index $pkg "console") }}
+{{-     if eq (includeTemplate ".chezmoitemplates/pkg-gate.txt" (dict "entry" $pkg "machine" $machine)) "1" }}
+{{-       if index $pkg "location" }}
+  # {{ $pkg.name }} — path-pinned: scope {{ if index $pkg "scope" }}{{ index $pkg "scope" }}{{ else }}manifest default{{ end }},
+  # location + sentinel-file drift detection ({{ $pkg.sentinel }}).
+  - name: {{ $pkg.name }}
+    type: Microsoft.DSC.Transitional/PowerShellScript
+    properties:
+      testScript: |
+        return [bool](Test-Path (Join-Path {{ $pkg.location }} '{{ $pkg.sentinel }}'))
+      setScript: |
+        # dsc runs resource scripts with CWD inside its WindowsApps package dir
+        # (VM-proven 2026-11-13) — TrustedInstaller-protected, and installers
+        # that derive temp paths from the inherited CWD fail there. Force a
+        # sane, writable CWD before invoking winget.
+        Set-Location $env:TEMP
+        $location = {{ $pkg.location }}
+        $wingetOutput = winget install --id {{ $pkg.id }} --exact --silent --accept-package-agreements --accept-source-agreements --disable-interactivity{{ with index $pkg "scope" }} --scope {{ . }}{{ end }} --location $location 2>&1
+        $wingetExit = $LASTEXITCODE
+        # Set-mode contract: ONLY error records fail a PowerShellScript
+        # resource (VM-proven 2026-11-13: a bare `exit 1` is judged success).
+        if ($wingetExit -notin 0, -1978335189) {
+            # dsc suppresses resource stdout on non-tty — embed the winget
+            # output tail in the error record so logs carry it.
+            $tail = ($wingetOutput | Select-Object -Last 6 | Out-String).Trim()
+            Write-Error "winget install {{ $pkg.id }} failed with exit code $wingetExit. winget output: $tail"
+            exit 1
+        }
+        if (-not (Test-Path (Join-Path $location '{{ $pkg.sentinel }}'))) {
+            $tail = ($wingetOutput | Select-Object -Last 6 | Out-String).Trim()
+            Write-Error "{{ $pkg.name }} was not found at ${location}: the installer ignored --location, is already installed elsewhere, or the install failed (winget exit $wingetExit). winget output: $tail"
+            exit 1
+        }
+{{-       else }}
+  # {{ $pkg.name }} — default path{{ with index $pkg "scope" }}, scope {{ . }}{{ end }}; install-once via winget list.
+  - name: {{ $pkg.name }}
+    type: Microsoft.DSC.Transitional/PowerShellScript
+    properties:
+      testScript: |
+        winget list --id {{ $pkg.id }} --exact --accept-source-agreements --disable-interactivity *> $null
+        return ($LASTEXITCODE -eq 0)
+      setScript: |
+        Set-Location $env:TEMP
+        $wingetOutput = winget install --id {{ $pkg.id }} --exact --silent --accept-package-agreements --accept-source-agreements --disable-interactivity{{ with index $pkg "scope" }} --scope {{ . }}{{ end }} 2>&1
+        $wingetExit = $LASTEXITCODE
+        # Set-mode contract: ONLY error records fail a PowerShellScript
+        # resource (VM-proven 2026-11-13: a bare `exit 1` is judged success).
+        if ($wingetExit -notin 0, -1978335189) {
+            # dsc suppresses resource stdout on non-tty — embed the winget
+            # output tail in the error record so logs carry it.
+            $tail = ($wingetOutput | Select-Object -Last 6 | Out-String).Trim()
+            Write-Error "winget install {{ $pkg.id }} failed with exit code $wingetExit. winget output: $tail"
+            exit 1
+        }
+{{-       end }}
+{{-     end }}
+{{-   end }}
+{{- end }}
+
+{{- /* Pass 2: console-delegated wrappers, always LAST. */ -}}
+{{- range $pkg := .packages.windows }}
+{{-   if index $pkg "console" }}
+{{-     if eq (includeTemplate ".chezmoitemplates/pkg-gate.txt" (dict "entry" $pkg "machine" $machine)) "1" }}
+  # {{ $pkg.name }} — {{ index $pkg "console" }}. Raw install is impossible
+  # from any admin context; this wrapper delegates: registers a one-shot
+  # scheduled task (Interactive logon type, Limited run level = unelevated
+  # interactive token), runs winget there, waits, unregisters. Requires an
+  # active console session for the current user (lane golden: autologon;
+  # real machines: the logged-on user). Install-once via winget list.
+  - name: {{ $pkg.name }}
+    type: Microsoft.DSC.Transitional/PowerShellScript
+    properties:
+      testScript: |
+        winget list --id {{ $pkg.id }} --exact --accept-source-agreements --disable-interactivity *> $null
+        return ($LASTEXITCODE -eq 0)
+      setScript: |
+        # {{ $pkg.name }}: {{ index $pkg "console" }}
+        Set-Location $env:TEMP
+        $taskName = 'dsc-console-{{ $pkg.name }}'
+        $action = New-ScheduledTaskAction -Execute "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe" -Argument 'install --id {{ $pkg.id }} --exact --silent --accept-package-agreements --accept-source-agreements --disable-interactivity' -WorkingDirectory $env:TEMP
+        $principal = New-ScheduledTaskPrincipal -UserId ([System.Security.Principal.WindowsIdentity]::GetCurrent().Name) -LogonType Interactive -RunLevel Limited
+        $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 20)
+        Register-ScheduledTask -TaskName $taskName -Action $action -Principal $principal -Settings $settings -Force | Out-Null
+        try {
+            Start-ScheduledTask -TaskName $taskName
+        } catch {
+            Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
+            Write-Error "{{ $pkg.name }} console delegation failed to start (is there an active console session for the current user? lane golden autologons; real machines need the user logged on): $_"
+            exit 1
+        }
+        $deadline = (Get-Date).AddMinutes(15)
+        do {
+            Start-Sleep -Seconds 5
+            $state = (Get-ScheduledTask -TaskName $taskName).State
+        } while ($state -eq 'Running' -and (Get-Date) -lt $deadline)
+        # LastTaskResult is the task process exit code as unsigned; winget's
+        # negative codes surface as large positives (0x8A15002B = no
+        # applicable update = already installed).
+        $exitHex = '0x{0:X}' -f (Get-ScheduledTaskInfo -TaskName $taskName).LastTaskResult
+        Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
+        if ($state -eq 'Running') {
+            Write-Error "{{ $pkg.name }} console-delegated install timed out after 15 min (task still Running)."
+            exit 1
+        }
+        if ($exitHex -notin '0x0', '0x8A15002B') {
+            Write-Error "{{ $pkg.name }} console-delegated winget install {{ $pkg.id }} failed with LastTaskResult $exitHex."
+            exit 1
+        }
+{{-     end }}
+{{-   end }}
+{{- end }}

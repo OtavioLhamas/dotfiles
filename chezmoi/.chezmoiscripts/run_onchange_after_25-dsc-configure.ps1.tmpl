@@ -1,0 +1,106 @@
+# packages DSC: {{ include "dot_config/dsc/packages.dsc.yaml.tmpl" | sha256sum }}
+# packages data: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+# vsconfig: {{ include "Documents/dot_community.vsconfig" | sha256sum }}
+
+# Applies winget packages declaratively via DSC v3
+# Linux-only edits also re-trigger this Windows script, but the apply is an idempotent no-op.
+# No self-elevation, packages rely on winget's per-package UAC prompt.
+
+$ErrorActionPreference = 'Stop'
+
+$PackagesDsc = "$env:USERPROFILE\.config\dsc\packages.dsc.yaml"
+
+if (-not (Get-Command dsc -ErrorAction SilentlyContinue)) {
+    throw "dsc not found on PATH. The pre-requisites hook must have installed DSC v3 first."
+}
+
+if (-not (Test-Path $PackagesDsc)) {
+    throw "packages.dsc.yaml not found at '$PackagesDsc'. Has chezmoi applied the dotfiles yet?"
+}
+
+Write-Host "Applying winget packages via DSC v3 ($PackagesDsc)..."
+# Retry loop: `dsc config set` aborts at the first failing resource, but every
+# installed package skips on the next pass (idempotent), so each retry makes
+# monotonic progress past transient installer failures.
+# Real persistent failures still throw after the final attempt.
+$maxAttempts = 3
+for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+    Write-Host "dsc config set attempt $attempt of $maxAttempts..."
+    dsc config set --file $PackagesDsc
+    if ($LASTEXITCODE -eq 0) { break }
+    if ($attempt -lt $maxAttempts) {
+        Write-Host "dsc config set attempt $attempt exited $LASTEXITCODE; retrying (installed packages skip on the next pass)."
+    }
+    else {
+        throw "dsc config set failed for packages.dsc.yaml after $maxAttempts attempts (last exit code $LASTEXITCODE)."
+    }
+}
+
+{{- if and (eq .chezmoi.os "windows") (has "development" .categories) }}
+$SourceDir = if ($env:CHEZMOI_SOURCE_DIR) { $env:CHEZMOI_SOURCE_DIR } else { Split-Path -Parent $PSScriptRoot }
+$VsConfig = Join-Path $SourceDir "Documents/dot_community.vsconfig"
+
+if (Test-Path $VsConfig) {
+    $installerDir = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer"
+
+    $vswhere = Join-Path $installerDir "vswhere.exe"
+    $setupExe = Join-Path $installerDir "setup.exe"
+
+    if (-not (Test-Path $vswhere)) {
+        # No Visual Studio instance to configure, skip cleanly instead of crashing on the missing executable.
+        # VS Community installs via the DSC packages document, so an instance may or may not exist yet at hook time.
+        Write-Host "Could not find vswhere.exe at '$vswhere' — no Visual Studio installation to configure; skipping."
+        return
+    }
+
+    $instance = & $vswhere `
+        -products Microsoft.VisualStudio.Product.Community `
+        -latest `
+        -format json 2>$null | ConvertFrom-Json
+
+    $installationPath = $instance.installationPath
+
+    if (-not $instance -or [string]::IsNullOrWhiteSpace($installationPath)) {
+        Write-Host "Could not locate a Visual Studio Community installation — skipping vsconfig."
+        return
+    }
+
+    if (-not (Test-Path $setupExe)) {
+        Write-Host "Could not find setup.exe at '$setupExe' — skipping vsconfig."
+        return
+    }
+
+    Write-Host "Configuring Visual Studio Community at '$installationPath'..."
+
+    $arguments = @(
+        'modify'
+        "--installPath `"$installationPath`""
+        "--config `"$VsConfig`""
+        '--passive'
+        '--norestart'
+        '--allowUnsignedExtensions'
+    ) -join ' '
+
+    $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+
+    if ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        $process = Start-Process `
+            -FilePath $setupExe `
+            -ArgumentList $arguments `
+            -Wait `
+            -PassThru
+    }
+    else {
+        $process = Start-Process `
+            -FilePath $setupExe `
+            -ArgumentList $arguments `
+            -Verb RunAs `
+            -Wait `
+            -PassThru
+    }
+
+    if ($process.ExitCode -ne 0) {
+        Write-Host "Visual Studio configuration failed with exit code $($process.ExitCode)."
+    }
+}
+{{ end -}}

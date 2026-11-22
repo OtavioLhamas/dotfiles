@@ -2,7 +2,9 @@ CONTEXT.md
 nix/CONTEXT.md
 
 {{- if ne .chezmoi.os "windows" }}
-dot_config/winget.dsc.yaml.tmpl
+# Windows-only declarative files (DSC v3 documents) and PowerShell scripts.
+# Patterns are target-relative: dot_config/dsc/* renders to .config/dsc/*.
+.config/dsc/**
 */*.ps1
 */*.ps1.tmpl
 Documents/*

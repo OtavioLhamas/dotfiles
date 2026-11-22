@@ -7,100 +7,11 @@ set -euo pipefail
 DISTRO="{{ .chezmoi.osRelease.id }}"
 
 wanted_packages=()
-{{- with .packages }}
-  {{- with .common }}
-    {{- range . }}
-wanted_packages+=("{{ . }}")
-    {{- end }}
-  {{- end }}
-  {{- if eq $.chezmoi.os "linux" }}
-    {{- with .linux }}
-      {{- with .common }}
-        {{- range . }}
-wanted_packages+=("{{ . }}")
-        {{- end }}
-      {{- end }}
-      {{- with (index . $.chezmoi.osRelease.id) }}
-        {{- range . }}
-wanted_packages+=("{{ . }}")
-        {{- end }}
-      {{- end }}
-    {{- end }}
-  {{- end }}
-  {{- with $.categories }}
-    {{- range . }}
-      {{- $cat := . }}
-      {{- with (index $.packages.categories $cat) }}
-        {{- with .common }}
-          {{- range . }}
-wanted_packages+=("{{ . }}")
-          {{- end }}
-        {{- end }}
-        {{- if eq $.chezmoi.os "linux" }}
-          {{- with .linux }}
-            {{- with .common }}
-              {{- range . }}
-wanted_packages+=("{{ . }}")
-              {{- end }}
-            {{- end }}
-            {{- with (index . $.chezmoi.osRelease.id) }}
-              {{- range . }}
-wanted_packages+=("{{ . }}")
-              {{- end }}
-            {{- end }}
-          {{- end }}
-        {{- end }}
-      {{- end }}
-    {{- end }}
-  {{- end }}
-  {{- with $.form_factor }}
-    {{- $ff := . }}
-    {{- with (index $.packages.form_factors $ff) }}
-      {{- with .common }}
-        {{- range . }}
-wanted_packages+=("{{ . }}")
-        {{- end }}
-      {{- end }}
-      {{- if eq $.chezmoi.os "linux" }}
-        {{- with .linux }}
-          {{- with .common }}
-            {{- range . }}
-wanted_packages+=("{{ . }}")
-            {{- end }}
-          {{- end }}
-          {{- with (index . $.chezmoi.osRelease.id) }}
-            {{- range . }}
-wanted_packages+=("{{ . }}")
-            {{- end }}
-          {{- end }}
-        {{- end }}
-      {{- end }}
-    {{- end }}
-  {{- end }}
-  {{- with $.desktop_environment }}
-    {{- $de := . }}
-    {{- with (index $.packages.desktop_environments $de) }}
-      {{- with .common }}
-        {{- range . }}
-wanted_packages+=("{{ . }}")
-        {{- end }}
-      {{- end }}
-      {{- if eq $.chezmoi.os "linux" }}
-        {{- with .linux }}
-          {{- with .common }}
-            {{- range . }}
-wanted_packages+=("{{ . }}")
-            {{- end }}
-          {{- end }}
-          {{- with (index . $.chezmoi.osRelease.id) }}
-            {{- range . }}
-wanted_packages+=("{{ . }}")
-            {{- end }}
-          {{- end }}
-        {{- end }}
-      {{- end }}
-    {{- end }}
-  {{- end }}
+{{- $machine := dict "categories" $.categories "distro" .chezmoi.osRelease.id "form_factor" $.form_factor "desktop_environment" $.desktop_environment }}
+{{- range $pkg := .packages.linux }}
+{{-   if eq (includeTemplate ".chezmoitemplates/pkg-gate.txt" (dict "entry" $pkg "machine" $machine)) "1" }}
+wanted_packages+=("{{ $pkg.name }}")
+{{-   end }}
 {{- end }}
 
 if [[ ${#wanted_packages[@]} -eq 0 ]]; then
@@ -110,9 +21,16 @@ fi
 
 missing_packages=()
 case "$DISTRO" in
+    arch|cachyos)
+        for pkg in "${wanted_packages[@]}"; do
+            if ! pacman -Q "$pkg" &>/dev/null; then
+                missing_packages+=("$pkg")
+            fi
+        done
+        ;;
     pop|ubuntu|debian)
         for pkg in "${wanted_packages[@]}"; do
-            if ! dpkg -l "$pkg" 2>/dev/null | grep -q ^ii; then
+            if ! dpkg -l "$pkg" 2>/dev/null | grep -q '^ii'; then
                 missing_packages+=("$pkg")
             fi
         done
@@ -135,15 +53,25 @@ if [[ ${#missing_packages[@]} -eq 0 ]]; then
     exit 0
 fi
 
+echo "Installing missing packages: ${missing_packages[*]}"
 case "$DISTRO" in
     pop|ubuntu|debian)
         sudo apt-get update -qq
-        install_cmd="sudo DEBIAN_FRONTEND=noninteractive apt-get install -y"
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${missing_packages[@]}"
         ;;
     fedora)
-        install_cmd="sudo dnf install -y"
+        sudo dnf install -y "${missing_packages[@]}"
+        ;;
+    arch|cachyos)
+        # Arch-family systems require a full sync/upgrade transaction; never use -Sy alone.
+        if [[ "${DOTFILES_TEST:-}" == "1" ]]; then
+            sudo pacman -Syu --needed --noconfirm "${missing_packages[@]}"
+        else
+            sudo pacman -Syu --needed "${missing_packages[@]}"
+        fi
+        ;;
+    *)
+        echo "Unknown/unsupported distro '$DISTRO'. Cannot install packages." >&2
+        exit 1
         ;;
 esac
-
-echo "Installing missing packages: ${missing_packages[*]}"
-$install_cmd "${missing_packages[@]}"
