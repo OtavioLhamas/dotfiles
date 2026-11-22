@@ -1,10 +1,23 @@
 $ErrorActionPreference = "Stop"
 
+if ($env:DOTFILES_TEST -eq "1" -and $env:DOTFILES_TEST_SKIP_WSL -eq "1") {
+    Write-Host "Skipping WSL setup for the native Windows test lane."
+    exit 0
+}
+
 $Distro = "Ubuntu"
 $User = $env:UserName
 
 if (!(Get-Command "wsl" -ErrorAction SilentlyContinue)) {
     Write-Error "WSL command not found. Ensure your DSC run completed successfully or reboot."
+    exit 1
+}
+
+# Inbox wsl.exe (System32) exists even when the WSL SUBSYSTEM is not installed.
+# Probe with an exit-code check and fail with an actionable message instead.
+wsl --status *> $null
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "WSL subsystem is not installed (wsl --status exited $LASTEXITCODE). Install it with 'wsl --install --no-distribution' (or enable Microsoft-Windows-Subsystem-Linux + VirtualMachinePlatform and install the Microsoft.WSL MSI — the Store/MSIX path fails from SSH with 0x80073d19), then reboot."
     exit 1
 }
 
@@ -26,7 +39,7 @@ wsl -d $Distro -u root bash -c "
     fi
 "
 
-# 4. Inject the wsl.conf configuration file to set the default engine states
+# Inject the wsl.conf configuration file to set the default engine states
 Write-Host "-> Writing /etc/wsl.conf configuration states..." -ForegroundColor Yellow
 $WslConfContent = @"
 [boot]
@@ -42,14 +55,22 @@ options = "metadata,uid=1000,gid=1000,umask=22,fmask=11"
 # Pass the raw string block over the stdin pipeline directly into a root file inside the guest
 $WslConfContent | wsl -d $Distro -u root bash -c "cat > /etc/wsl.conf"
 
-# 5. Cycle the VM instance to forcefully apply the new wsl.conf settings
+# Cycle the VM instance to forcefully apply the new wsl.conf settings
 Write-Host "-> Terminating WSL to reload configuration states..." -ForegroundColor Yellow
 wsl --terminate $Distro
 Start-Sleep -Seconds 3
 
-# 6. KICK OFF THE RECURSIVE LOOP 
-# The VM boots up natively as the current user, pulls your bootstrap.sh script over curl, and hands execution off
+# KICK OFF THE RECURSIVE LOOP
+# The VM boots up natively as the current user and hands execution to the
+# repo's own bootstrap.sh, taken from the local checkout (no network fetch).
 Write-Host "-> Triggering downstream Linux Bootstrap inside Guest VM..." -ForegroundColor Green
-wsl -d $Distro -u $User bash -c "curl -fsSL https://raw.githubusercontent.com/yourusername/dotfiles/main/bootstrap.sh | bash"
+{{ if .chezmoi.workingTree -}}
+$Bootstrap = Join-Path "{{ .chezmoi.workingTree }}" "bootstrap.sh"
+$BootstrapWsl = (wsl -d $Distro wslpath -a "$Bootstrap")
+wsl -d $Distro -u $User bash -lc "bash '$BootstrapWsl'"
+{{ else -}}
+$BootstrapUrl = if ($env:DOTFILES_BOOTSTRAP_URL) { $env:DOTFILES_BOOTSTRAP_URL } else { "https://raw.githubusercontent.com/OtavioLhamas/dotfiles/main/bootstrap.sh" }
+wsl -d $Distro -u $User bash -lc "curl -fsSL '$BootstrapUrl' | bash"
+{{ end -}}
 
 Write-Host "====== WSL Provisioning Completed Succesfully ======" -ForegroundColor Cyan
