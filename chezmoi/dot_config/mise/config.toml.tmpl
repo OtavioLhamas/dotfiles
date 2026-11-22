@@ -12,6 +12,11 @@
 
 "aqua:neovim/neovim" = "0.12.5"
 "aqua:LuaLS/lua-language-server" = "latest"
+# Pinned to 2026.10.0: upstream renamed the CLI release assets in 2026.11.0
+# (bw-oss-/bw-bit-linux-*.zip), but the aqua registry still expects the
+# retired bw-linux-<v>.zip name, so "latest" fails to resolve any asset.
+"aqua:bitwarden/clients" = "2026.10.0"
+"yq" = "latest"
 # "aqua:restic/restic" = "latest"
 "conda:make" = "latest"
 "aqua:starship/starship" = "latest"
@@ -31,9 +36,9 @@
 ###
 
 ### Linux-only tools ###
-"aqua:pypa/pipx" = { version = "1.12", depends = ["core:python"], os = ["linux"] }
-"ansible" = { version = "13", depends = ["aqua:pypa/pipx"], pipx_args = "--include-deps", uvx = false, os = ["linux"] }
 "aqua:fish-shell/fish-shell" = { version = "latest", os = ["linux"] }
+"aqua:astral-sh/uv" = { version = "latest", os = ["linux"] }
+"ansible" = { version = "13", depends = ["aqua:astral-sh/uv"], os = ["linux"] }
 # "aqua:aristocratos/btop" = { version = "latest", os = ["linux"] }
 "conda:vim" = { version = "latest", os = ["linux"] }
 ###
@@ -59,6 +64,11 @@ EDITOR = "nvim"
 VISUAL = "nvim"
 LESSHISTFILE = "-" # "-" disables the less history file
 MANPAGER = 'nvim +"Man $*" +only'
+{{ if and (eq .chezmoi.os "linux") (ne .form_factor "server") (not (contains "microsoft" (.chezmoi.kernel.osrelease | lower))) }}
+# Bitwarden Flatpak's SSH-agent socket. mise activation exports this to
+# terminal-launched clients; desktop-session propagation is validated separately.
+SSH_AUTH_SOCK = "{{ .chezmoi.homeDir }}/.var/app/com.bitwarden.desktop/data/.bitwarden-ssh-agent.sock"
+{{ end }}
 FZF_DEFAULT_COMMAND = "fd --hidden --strip-cwd-prefix --exclude .git "
 FZF_CTRL_T_COMMAND = "fd --hidden --strip-cwd-prefix --exclude .git "
 FZF_ALT_C_COMMAND = "fd --type=d --hidden --strip-cwd-prefix --exclude .git"
